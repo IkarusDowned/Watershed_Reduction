@@ -15,5 +15,8 @@
 #C::B information
 *.cbp
 
+#specific project files
+Watershed_reduction*
+
 #output folders
 bin/

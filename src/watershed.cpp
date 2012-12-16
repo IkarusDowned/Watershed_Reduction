@@ -38,6 +38,80 @@ static void construct_mesh(Mesh& mesh, Polygon& poly, std::vector<std::string>& 
     AttachPolyToMesh(mesh,poly);
 
 }
+
+static void construct_box(Polygon& polygon)
+{
+    long min_x,min_y;
+    long max_x,max_y;
+    std::vector<Vertex*>& verts = polygon._vertexes;
+    if(verts.size() == 0)
+        return;
+    min_x = max_x = verts[0]->_x;
+    min_y = max_y = verts[0]->_y;
+    for(size_t i = 1; i < verts.size(); ++i)
+    {
+        Vertex& v = *verts[i];
+        if(min_x > v._x) min_x = v._x;
+        if(max_x < v._x) max_x = v._x;
+        if(min_y > v._y) min_y = v._y;
+        if(max_y < v._y) max_y = v._y;
+    }
+    polygon._box._max_x = max_x;
+    polygon._box._max_y = max_y;
+    polygon._box._min_x = min_x;
+    polygon._box._min_y = min_y;
+}
+inline static void construct_boxes(std::vector<Polygon*>& polygons)
+{
+
+    const size_t N = polygons.size();
+    for(size_t i = 0; i < N; ++i)
+        construct_box(*polygons[i]);
+}
+static bool collision(BoundingBox& a, BoundingBox& b)
+{
+    //check x values
+    if(a._min_x > b._min_x && a._min_x > b._max_x)
+        return false;
+    if(a._max_x < b._min_x && a._max_x < b._max_x)
+        return false;
+    //check y values
+    if(a._min_y > b._min_y && a._min_y > b._max_y)
+        return false;
+    if(a._max_y < b._min_y && a._max_y < b._max_y)
+        return false;
+    return true;
+}
+static const double TJUNC_ERR = 1.0;
+static const double TJUNC_ERR_SQR = TJUNC_ERR * TJUNC_ERR;
+//T-junction elimination test
+static bool should_tjunc_test(Polygon& a, Polygon& x)
+{
+
+}
+static void detect_collisions(std::vector<Polygon*>& polygons)
+{
+    const size_t N = polygons.size();
+    size_t collisions = 0;
+    for(size_t i = 0; i < N; ++i)
+    {
+        Polygon& p1 = *polygons[i];
+        for(size_t j = i+1; j < N; ++j)
+        {
+            Polygon& p2 = *polygons[j];
+            if(collision(p1._box,p2._box))
+            {
+                //do p1->p2 T-junction elimination
+                //do p2->p1 T-junction elimination
+                ++collisions;
+                //std::cout << "\t\t\t\tcollision between: " << p1._level_6_id << " and " << p2._level_6_id << std::endl;
+            }
+
+
+        }
+    }
+    std::cout << "\t\t\tcollisions: " << collisions << std::endl;
+}
 void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
 {
     std::cout << "Attempting to construct initial meshes" << std::endl;
@@ -74,6 +148,7 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
                 if(this_level_2_id != current_mesh->_level_2_id)
                 {
                     current_mesh = new Mesh();
+                    //construct_box(*current_polygon);
                     current_polygon = new Polygon();
                     construct_mesh(*current_mesh,*current_polygon,split_line);
                     mesh_map[this_level_1_id] = current_mesh;
@@ -85,6 +160,7 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
                 //add the new vertex to it
                 if(this_level_6_id != current_polygon->_level_6_id)
                 {
+                    //construct_box(*current_polygon);
                     current_polygon = new Polygon();
                     current_polygon->_level_6_id = this_level_6_id;
                     Vertex* vert = new Vertex();
@@ -107,6 +183,16 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
 
         }
         ++count;
+    }
+    //construct the bounding boxes for each polygon
+    Watersheds::iterator end = mesh_map.end();
+    for(Watersheds::iterator itr = mesh_map.begin();itr != end; ++itr)
+    {
+        construct_boxes(itr->second->_polygons);
+    }
+    for(Watersheds::iterator itr = mesh_map.begin();itr != end; ++itr)
+    {
+        detect_collisions(itr->second->_polygons);
     }
 
     std::cout << "processed: " << count << " lines of mesh data" << std::endl;

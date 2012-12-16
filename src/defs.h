@@ -10,11 +10,15 @@ struct Mesh
     unsigned short _level_2_id;
     std::vector<Polygon*> _polygons;
 };
-
+struct BoundingBox {
+    long _min_x,_max_x;
+    long _min_y,_max_y;
+};
 struct Polygon {
     Mesh* _parent;
     unsigned long _level_6_id;
     std::vector<Vertex*> _vertexes;
+    BoundingBox _box;
 };
 
 struct Vertex {

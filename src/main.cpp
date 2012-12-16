@@ -57,6 +57,7 @@ int main(int args, char* argv[])
     Watersheds meshes;
     //construct the mesh tree
     ::construct_meshs(meshes,infile);
+
     /*
     Watersheds::iterator end = meshes.end();
     std::cout << "Available level 1 meshes:" << std::endl;
@@ -79,6 +80,7 @@ int main(int args, char* argv[])
 
     }
     */
+    /*
     Watersheds::iterator end = meshes.end();
     std::cout << "Generate per level 2 edges" << std::endl;
 
@@ -87,15 +89,9 @@ int main(int args, char* argv[])
         std::cout << "For mesh " << itr->first << ":" << std::endl;
         Level2* level2 = itr->second;
         std::list<Line> lines = detect_mesh_edges(*level2);
-        /*
-        std::list<Line>::iterator end = lines.end();
-        for(std::list<Line>::iterator itr = lines.begin(); itr != end; ++itr)
-        {
-            Line &l = *itr;
-            std::cout << "\tstart:(" << l._start._x << "," << l._start._y <<") end:(" << l._end._x << "," << l._end._y << ")" << std::endl;
-        }
-        */
+
     }
+    */
     ::destroy_mesh_data(meshes);
 
     return 0;

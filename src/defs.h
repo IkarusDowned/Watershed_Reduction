@@ -21,6 +21,14 @@ struct Vertex {
     Polygon* _parent;
     long _x;
     long _y;
+    bool operator==(const Vertex& other)
+    {
+        bool x_equal, y_equal;
+        x_equal = other._x == _x;
+        y_equal = other._y == _y;
+        return x_equal && y_equal;
+
+    }
 };
 
 typedef Mesh Level2;
@@ -29,6 +37,7 @@ typedef Polygon Level6;
 struct Line {
     Vertex _start;
     Vertex _end;
+    unsigned long _touch_count;
 };
 
 void AttachPolyToMesh(Mesh& mesh, Polygon& poly);

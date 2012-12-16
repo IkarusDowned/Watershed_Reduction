@@ -33,6 +33,9 @@ struct Vertex {
         return x_equal && y_equal;
 
     }
+    Vertex operator-(const Vertex& other);
+    Vertex operator+(const Vertex& other);
+    long operator*(const Vertex& other);    //dot product
 };
 
 typedef Mesh Level2;

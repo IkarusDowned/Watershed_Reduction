@@ -25,7 +25,7 @@ struct Vertex {
     Polygon* _parent;
     long _x;
     long _y;
-    bool operator==(const Vertex& other)
+    bool operator==(const Vertex& other) const
     {
         bool x_equal, y_equal;
         x_equal = other._x == _x;
@@ -33,9 +33,9 @@ struct Vertex {
         return x_equal && y_equal;
 
     }
-    Vertex operator-(const Vertex& other);
-    Vertex operator+(const Vertex& other);
-    long operator*(const Vertex& other);    //dot product
+    Vertex operator-(const Vertex& other) const;
+    Vertex operator+(const Vertex& other) const;
+    long operator*(const Vertex& other) const;    //dot product
 };
 
 typedef Mesh Level2;

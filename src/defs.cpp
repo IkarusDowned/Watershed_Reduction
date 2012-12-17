@@ -11,7 +11,7 @@ void AttachVertToPoly(Polygon& poly, Vertex& vertex)
     vertex._parent = &poly;
 }
 
-Vertex Vertex::operator-(const Vertex& other)
+Vertex Vertex::operator-(const Vertex& other) const
 {
     Vertex res = *this;
     res._parent = NULL;
@@ -20,7 +20,7 @@ Vertex Vertex::operator-(const Vertex& other)
     return res;
 }
 
-Vertex Vertex::operator+(const Vertex& other)
+Vertex Vertex::operator+(const Vertex& other) const
 {
     Vertex res = *this;
     res._parent = NULL;
@@ -28,7 +28,7 @@ Vertex Vertex::operator+(const Vertex& other)
     res._y += other._y;
     return res;
 }
-long Vertex::operator*(const Vertex& other)
+long Vertex::operator*(const Vertex& other) const
 {
     return (_x * other._x) + (_y * other._y);
 }

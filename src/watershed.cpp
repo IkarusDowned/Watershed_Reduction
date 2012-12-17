@@ -60,6 +60,7 @@ static void construct_box(Polygon& polygon)
     polygon._box._max_y = max_y;
     polygon._box._min_x = min_x;
     polygon._box._min_y = min_y;
+    std::cout << "box for " << polygon._level_6_id << " created with: " << min_x << ":" << max_x << "," << min_y << ":" << max_y << std::endl;
 }
 inline static void construct_boxes(std::vector<Polygon*>& polygons)
 {
@@ -104,7 +105,7 @@ static void detect_collisions(std::vector<Polygon*>& polygons)
                 //do p1->p2 T-junction elimination
                 //do p2->p1 T-junction elimination
                 ++collisions;
-                //std::cout << "\t\t\t\tcollision between: " << p1._level_6_id << " and " << p2._level_6_id << std::endl;
+                std::cout << "\t\t\t\tcollision between: " << p1._level_6_id << " and " << p2._level_6_id << std::endl;
             }
 
 
@@ -184,6 +185,7 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
         }
 
     }
+
     //construct the bounding boxes for each polygon
     Watersheds::iterator end = mesh_map.end();
     for(Watersheds::iterator itr = mesh_map.begin();itr != end; ++itr)

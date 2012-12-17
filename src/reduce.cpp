@@ -7,9 +7,9 @@
 #include <string>
 #include <iostream>
 
-static bool count_not_0(const Line& l)
+static bool count_not_1(const Line& l)
 {
-    return l._touch_count > 0 ? true : false;
+    return l._touch_count > 1 ? true : false;
 }
 static std::list<Line>::iterator exists(std::list<Line>& lines, const Line& line)
 {
@@ -18,29 +18,11 @@ static std::list<Line>::iterator exists(std::list<Line>& lines, const Line& line
     for(;itr != end; ++itr)
     {
         Line& l = *itr;
-        //we are guaranteed that the ordering of the lines is by x
-        //a line exists, then, if the start point and end points are equal
-        if(l._start == line._start && l._end == line._end)
+        if((l._start == line._start && l._end == line._end) || (l._start == line._end && l._end == line._start))
             return itr;
 
     }
     return end;
-}
-static inline void reorder(Line* line)
-{
-    if(!line)
-        return;
-    //we order the line by its x coordinate.
-    //the start should be less than the end
-
-    Vertex& start = line->_start;
-    Vertex& end = line->_end;
-    if(start._x > end._x)
-    {
-        Vertex temp = line->_start;
-        line->_start = line->_end;
-        line->_end = temp;
-    }
 }
 static inline void _debug_equal(Line& line)
 {
@@ -75,12 +57,11 @@ std::list<Line> detect_mesh_edges(const Mesh& mesh)
                 if(j == (V-1))
                 {
                     Line l;
-                    l._touch_count = 0;
+                    l._touch_count = 1;
                     l._end = *vertexes[0];
                     l._start = *vertexes[j];
                     l._end._parent = l._start._parent = NULL;
-                    reorder(&l);
-                    _debug_equal(l);
+                    //_debug_equal(l);
                     //search and either insert or delete the line
                     std::list<Line>::iterator itr = exists(lines,l);
                     if(itr != lines.end())
@@ -92,12 +73,11 @@ std::list<Line> detect_mesh_edges(const Mesh& mesh)
                 else
                 {
                     Line l;
-                    l._touch_count = 0;
+                    l._touch_count = 1;
                     l._start = *vertexes[j];
                     l._end = *vertexes[j+1];
                     l._end._parent = l._start._parent = NULL;
-                    reorder(&l);
-                    _debug_equal(l);
+                    //_debug_equal(l);
                     //serach and either insert or delete the line
                     std::list<Line>::iterator itr = exists(lines,l);
                     if(itr != lines.end())
@@ -109,12 +89,11 @@ std::list<Line> detect_mesh_edges(const Mesh& mesh)
                 }
 
             }
-            std::cout << "\tReduced polygon: " << poly._level_6_id << std::endl;
         }
 
 
     }
-    lines.remove_if(count_not_0);
+    lines.remove_if(count_not_1);
     std::list<Line>::iterator end = lines.end();
     //TODO: need T-junction elmination at the polygon creation level
     for(std::list<Line>::iterator itr = lines.begin(); itr != end; ++itr)

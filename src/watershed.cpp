@@ -87,7 +87,7 @@ static const double TJUNC_ERR_SQR = TJUNC_ERR * TJUNC_ERR;
 //T-junction elimination test
 static bool should_tjunc_test(Polygon& a, Polygon& x)
 {
-
+    return false;
 }
 static void detect_collisions(std::vector<Polygon*>& polygons)
 {
@@ -180,9 +180,9 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
                 AttachVertToPoly(*current_polygon,*vert);
 
             }
-
+            ++count;
         }
-        ++count;
+
     }
     //construct the bounding boxes for each polygon
     Watersheds::iterator end = mesh_map.end();

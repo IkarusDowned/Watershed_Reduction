@@ -80,7 +80,7 @@ int main(int args, char* argv[])
 
     }
     */
-    /*
+
     Watersheds::iterator end = meshes.end();
     std::cout << "Generate per level 2 edges" << std::endl;
 
@@ -91,7 +91,7 @@ int main(int args, char* argv[])
         std::list<Line> lines = detect_mesh_edges(*level2);
 
     }
-    */
+
     ::destroy_mesh_data(meshes);
 
     return 0;

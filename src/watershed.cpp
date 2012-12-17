@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream> //for debuging
+
+#include "reduce.hpp"
+
 enum FIELDS {
     LEVEL_1,
     LEVEL_2,
@@ -85,11 +88,101 @@ static bool collision(BoundingBox& a, BoundingBox& b)
 }
 static const double TJUNC_ERR = 1.0;
 static const double TJUNC_ERR_SQR = TJUNC_ERR * TJUNC_ERR;
-//T-junction elimination test
-static bool should_tjunc_test(Polygon& a, Polygon& x)
+//checks to see if there is actually a possibly t-junction between the point and the line
+static bool possible_tjunc(const Line& a, const Vertex& x)
 {
-    return false;
+    //check if the vertex is the end points. if it is, then return false
+    if(a._start == x || a._end == x)
+        return false;
+
+    //TODO: actual check logic based on distance and error
+    return true;
 }
+//on possible junction, we re-check
+//if the t-junction occurs:
+//1) modify the line to end at x
+//2) createa  new line at
+static void tjunc_if_needed(std::list<Line>& lines,std::list<Line>::iterator& itr,Line* a, const Vertex& x)
+{
+    //check if the vertex is the end points. if it is, then return
+    if(a->_start == x || a->_end == x)
+        return;
+    //TODO: actual t-junction logic
+    //the bottom is the insertion logic
+    Vertex temp = a->_end;
+    //split and create
+    a->_end = x;
+    Line l;
+    l._start = x;
+    l._end = temp;
+    l._touch_count = 0;
+    ++itr;  //advance ahead, since insert will put behind
+    lines.insert(itr,l);
+    --itr;  //move back. we are now at l
+    --itr;  //move back, we are now at our original position;
+}
+
+static void reconstruct(Polygon& poly,std::list<Line>& lines)
+{
+    //clear the current vertex list. don't forget to delete the data
+    std::vector<Vertex*>& verts = poly._vertexes;
+    const size_t N = verts.size();
+    for(size_t i = 0; i < N; ++i)
+        delete verts[i];
+    verts.clear();
+
+    //for each line, we put it back into the vertex
+    //with start->end order.
+    //on the last line, add only the start
+    std::list<Line>::iterator end = lines.end();
+    std::list<Line>::iterator itr = lines.begin();
+    std::list<Line>::iterator last = lines.end(); --last;
+    for(;itr != end;++itr)
+    {
+        if(itr == last)
+        {
+            Vertex* v = new Vertex();
+            *v = (*itr)._start;
+            AttachVertToPoly(poly,*v);
+        }
+        else
+        {
+            Vertex* v = new Vertex();
+            *v = (*itr)._start;
+            AttachVertToPoly(poly,*v);
+            v = new Vertex();
+            *v = (*itr)._end;
+            AttachVertToPoly(poly,*v);
+        }
+    }
+}
+static void do_tjunc_elimination(Polygon* a, Polygon* x)
+{
+    //generate the line list for a
+    std::list<Line> lines = make_line_list(*a);
+    size_t initial_size = lines.size();
+    //loop thru each line, checking if a tjunction test is even neccesary
+    //note, we might add lines here, so you cannnot use const the end iteratr
+    for(std::list<Line>::iterator itr = lines.begin(); itr != lines.end(); ++itr)
+    {
+        Line& line = *itr;
+        std::vector<Vertex*>& x_verts = x->_vertexes;
+        const size_t N = x_verts.size();
+        for(size_t i = 0; i < N; ++i)
+        {
+            Vertex& X = *x_verts[i];
+            if(possible_tjunc(line,X))
+                tjunc_if_needed(lines,itr,&line,X);
+        }
+    }
+    //recreate the vertex vector if there was a reconstruction
+    if(initial_size != lines.size())
+    {
+        reconstruct(*a,lines);
+    }
+}
+
+
 static void detect_collisions(std::vector<Polygon*>& polygons)
 {
     const size_t N = polygons.size();
@@ -103,7 +196,9 @@ static void detect_collisions(std::vector<Polygon*>& polygons)
             if(collision(p1._box,p2._box))
             {
                 //do p1->p2 T-junction elimination
+                do_tjunc_elimination(&p1,&p2);
                 //do p2->p1 T-junction elimination
+                do_tjunc_elimination(&p2,&p1);
                 ++collisions;
                 std::cout << "\t\t\t\tcollision between: " << p1._level_6_id << " and " << p2._level_6_id << std::endl;
             }

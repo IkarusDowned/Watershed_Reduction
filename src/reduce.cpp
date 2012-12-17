@@ -33,6 +33,27 @@ static inline void _debug_equal(Line& line)
     }
 
 }
+
+std::list<Line> make_line_list(const Polygon& poly)
+{
+    const std::vector<Vertex*>& vertexes = poly._vertexes;
+    const size_t V = vertexes.size();
+    std::list<Line> lines;
+    for(size_t i = 0; i < V; ++i)
+    {
+        Line l;
+        l._touch_count = 0;
+        l._end._parent = l._start._parent = NULL;
+        l._start = *vertexes[i];
+        //last vertex in list, wrap around
+        if(i == (V-1))
+            l._end = *vertexes[0];
+        else
+            l._end = *vertexes[i+1];
+        lines.push_back(l);
+    }
+    return lines;
+}
 std::list<Line> detect_mesh_edges(const Mesh& mesh)
 {
     const std::vector<Polygon*>& polygons = mesh._polygons;

@@ -109,6 +109,11 @@ static void tjunc_if_needed(std::list<Line>& lines,std::list<Line>::iterator& it
         return;
     //TODO: actual t-junction logic
     //the bottom is the insertion logic
+    std::cout <<"should take line:(" << a->_start._x << "," << a->_start._y << ") to (" << a->_end._x << "," << a->_end._y <<")" << std::endl
+        << " and intersect it to make:" << std::endl
+        << "(" << a->_start._x << "," << a->_start._y << ") to (" << x._x << "," << x._y << ") and ("
+        << x._x << "," << x._y << ") to (" << a->_end._x << "," << a->_end._y <<")" << std::endl;
+    /*
     Vertex temp = a->_end;
     //split and create
     a->_end = x;
@@ -120,6 +125,7 @@ static void tjunc_if_needed(std::list<Line>& lines,std::list<Line>::iterator& it
     lines.insert(itr,l);
     --itr;  //move back. we are now at l
     --itr;  //move back, we are now at our original position;
+    */
 }
 
 static void reconstruct(Polygon& poly,std::list<Line>& lines)
@@ -133,27 +139,15 @@ static void reconstruct(Polygon& poly,std::list<Line>& lines)
 
     //for each line, we put it back into the vertex
     //with start->end order.
-    //on the last line, add only the start
+    //only add the first
     std::list<Line>::iterator end = lines.end();
-    std::list<Line>::iterator itr = lines.begin();
-    std::list<Line>::iterator last = lines.end(); --last;
-    for(;itr != end;++itr)
+    std::list<Line>::iterator begin = lines.begin();
+    for(std::list<Line>::iterator itr = begin;itr != end;++itr)
     {
-        if(itr == last)
-        {
-            Vertex* v = new Vertex();
-            *v = (*itr)._start;
-            AttachVertToPoly(poly,*v);
-        }
-        else
-        {
-            Vertex* v = new Vertex();
-            *v = (*itr)._start;
-            AttachVertToPoly(poly,*v);
-            v = new Vertex();
-            *v = (*itr)._end;
-            AttachVertToPoly(poly,*v);
-        }
+        Vertex* v = new Vertex();
+        *v = (*itr)._start;
+        AttachVertToPoly(poly,*v);
+
     }
 }
 static void do_tjunc_elimination(Polygon* a, Polygon* x)
@@ -178,6 +172,7 @@ static void do_tjunc_elimination(Polygon* a, Polygon* x)
     //recreate the vertex vector if there was a reconstruction
     if(initial_size != lines.size())
     {
+        std::cout << "\t\t\treconstructing..." << std::endl;
         reconstruct(*a,lines);
     }
 }

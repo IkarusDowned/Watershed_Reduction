@@ -17,6 +17,7 @@
 
 #specific project files
 Watershed_reduction*
+*.csv
 
 #output folders
 bin/

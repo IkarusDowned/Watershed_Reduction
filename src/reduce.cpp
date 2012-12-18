@@ -86,9 +86,12 @@ std::list<Line> detect_mesh_edges(const Mesh& mesh)
                     //search and either insert or delete the line
                     std::list<Line>::iterator itr = exists(lines,l);
                     if(itr != lines.end())
-                        ++(*itr)._touch_count;
+                        lines.erase(itr);
                     else
                         lines.push_back(l);
+                        //++(*itr)._touch_count;
+                    //else
+                        //lines.push_back(l);
 
                 }
                 else
@@ -102,9 +105,12 @@ std::list<Line> detect_mesh_edges(const Mesh& mesh)
                     //serach and either insert or delete the line
                     std::list<Line>::iterator itr = exists(lines,l);
                     if(itr != lines.end())
-                        ++(*itr)._touch_count;
+                        lines.erase(itr);
                     else
                         lines.push_back(l);
+                        //++(*itr)._touch_count;
+                    //else
+                        //lines.push_back(l);
 
 
                 }
@@ -114,13 +120,15 @@ std::list<Line> detect_mesh_edges(const Mesh& mesh)
 
 
     }
-    lines.remove_if(count_not_1);
+    //lines.remove_if(count_not_1);
     std::list<Line>::iterator end = lines.end();
-    //TODO: need T-junction elmination at the polygon creation level
+    /*
     for(std::list<Line>::iterator itr = lines.begin(); itr != end; ++itr)
     {
         Line& l = *itr;
         std::cout << "\tstart:(" << l._start._x << "," << l._start._y <<") end:(" << l._end._x << "," << l._end._y << ")" << std::endl;
     }
+    */
+    std::cout << "total lines remaining: " << lines.size() << std::endl;
     return lines;
 }

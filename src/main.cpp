@@ -82,8 +82,11 @@ int main(int args, char* argv[])
     */
 
     Watersheds::iterator end = meshes.end();
+    /*
+    for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
+        do_tjunction_elimination(*itr->second);
     std::cout << "Generate per level 2 edges" << std::endl;
-
+    */
     for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
     {
         std::cout << "For mesh " << itr->first << ":" << std::endl;

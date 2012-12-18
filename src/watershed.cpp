@@ -9,6 +9,7 @@
 #include <iostream> //for debuging
 
 #include "reduce.hpp"
+#include "math.hpp"
 
 enum FIELDS {
     LEVEL_1,
@@ -63,7 +64,7 @@ static void construct_box(Polygon& polygon)
     polygon._box._max_y = max_y;
     polygon._box._min_x = min_x;
     polygon._box._min_y = min_y;
-    std::cout << "box for " << polygon._level_6_id << " created with: " << min_x << ":" << max_x << "," << min_y << ":" << max_y << std::endl;
+    //std::cout << "box for " << polygon._level_6_id << " created with: " << min_x << ":" << max_x << "," << min_y << ":" << max_y << std::endl;
 }
 inline static void construct_boxes(std::vector<Polygon*>& polygons)
 {
@@ -88,32 +89,43 @@ static bool collision(BoundingBox& a, BoundingBox& b)
 }
 static const double TJUNC_ERR = 1.0;
 static const double TJUNC_ERR_SQR = TJUNC_ERR * TJUNC_ERR;
+inline static double square(const Vertex& v)
+{
+    return static_cast<double>(v * v);
+}
+inline static double square(double x)
+{
+    return x * x;
+}
 //checks to see if there is actually a possibly t-junction between the point and the line
-static bool possible_tjunc(const Line& a, const Vertex& x)
+static bool possible_tjunc(const Line& a, const Vertex& q)
 {
     //check if the vertex is the end points. if it is, then return false
-    if(a._start == x || a._end == x)
+    if(a._start == q || a._end == q)
         return false;
+    const Vertex& p_1 = a._start;
+    const Vertex& p_2 = a._end;
+    const Vertex q_minus_p_1 = q - p_1;
+    const Vertex p_2_minus_p_1 = p_2 - p_1;
+    const double q_minus_squared = square(q_minus_p_1);
+    const double top = square(q_minus_p_1 * p_2_minus_p_1);
+    const double bottom = square(p_2_minus_p_1);
 
-    //TODO: actual check logic based on distance and error
+    double d_squared = q_minus_squared - top / bottom;
+    if(d_squared >= TJUNC_ERR_SQR)
+        return false;
+    double t = ((double)(q_minus_p_1 * p_2_minus_p_1)) / vertex::magnitude(p_2_minus_p_1);
+    if (t < TJUNC_ERR || t > (vertex::magnitude(p_2_minus_p_1) - TJUNC_ERR))
+        return false;
     return true;
+
 }
-//on possible junction, we re-check
-//if the t-junction occurs:
+//on tjunction
 //1) modify the line to end at x
 //2) createa  new line at
-static void tjunc_if_needed(std::list<Line>& lines,std::list<Line>::iterator& itr,Line* a, const Vertex& x)
+static void elimate_tjunction(std::list<Line>& lines,std::list<Line>::iterator& itr,Line* a, const Vertex& x)
 {
-    //check if the vertex is the end points. if it is, then return
-    if(a->_start == x || a->_end == x)
-        return;
-    //TODO: actual t-junction logic
-    //the bottom is the insertion logic
-    std::cout <<"should take line:(" << a->_start._x << "," << a->_start._y << ") to (" << a->_end._x << "," << a->_end._y <<")" << std::endl
-        << " and intersect it to make:" << std::endl
-        << "(" << a->_start._x << "," << a->_start._y << ") to (" << x._x << "," << x._y << ") and ("
-        << x._x << "," << x._y << ") to (" << a->_end._x << "," << a->_end._y <<")" << std::endl;
-    /*
+
     Vertex temp = a->_end;
     //split and create
     a->_end = x;
@@ -125,7 +137,7 @@ static void tjunc_if_needed(std::list<Line>& lines,std::list<Line>::iterator& it
     lines.insert(itr,l);
     --itr;  //move back. we are now at l
     --itr;  //move back, we are now at our original position;
-    */
+
 }
 
 static void reconstruct(Polygon& poly,std::list<Line>& lines)
@@ -149,6 +161,14 @@ static void reconstruct(Polygon& poly,std::list<Line>& lines)
         AttachVertToPoly(poly,*v);
 
     }
+    std::cout << "\tpoly:" << poly._level_6_id << std::endl;
+    for(size_t i = 0; i < verts.size(); ++i)
+    {
+        const Vertex& v = *verts[i];
+        std::cout << "(" << v._x << "," << v._y << ")" << std::endl;
+    }
+
+
 }
 static void do_tjunc_elimination(Polygon* a, Polygon* x)
 {
@@ -165,8 +185,13 @@ static void do_tjunc_elimination(Polygon* a, Polygon* x)
         for(size_t i = 0; i < N; ++i)
         {
             Vertex& X = *x_verts[i];
+            //std::cout << a->_level_6_id << ": checking line: " << line._start << line._end << " against vertex " << X << "...";
             if(possible_tjunc(line,X))
-                tjunc_if_needed(lines,itr,&line,X);
+            {
+                elimate_tjunction(lines,itr,&line,X);
+                std::cout << "elminating T-junction" << std::endl;
+            }
+
         }
     }
     //recreate the vertex vector if there was a reconstruction
@@ -178,8 +203,10 @@ static void do_tjunc_elimination(Polygon* a, Polygon* x)
 }
 
 
-static void detect_collisions(std::vector<Polygon*>& polygons)
+void do_tjunction_elimination(Mesh& mesh)
 {
+
+    std::vector<Polygon*> polygons = mesh._polygons;
     const size_t N = polygons.size();
     size_t collisions = 0;
     for(size_t i = 0; i < N; ++i)
@@ -201,7 +228,8 @@ static void detect_collisions(std::vector<Polygon*>& polygons)
 
         }
     }
-    std::cout << "\t\t\tcollisions: " << collisions << std::endl;
+    //std::cout << "\t\t\tcollisions: " << collisions << std::endl;
+
 }
 void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
 {
@@ -210,7 +238,7 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
     long count = 0;
     Mesh* current_mesh;
     Polygon* current_polygon;
-    std::getline(input,line);   //discard the first line
+    std::getline(input,line);   //discard the first line, which is assumed to be the column information
     while(!input.eof())
     {
         std::getline(input,line);
@@ -282,12 +310,7 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
     {
         construct_boxes(itr->second->_polygons);
     }
-    for(Watersheds::iterator itr = mesh_map.begin();itr != end; ++itr)
-    {
-        detect_collisions(itr->second->_polygons);
-    }
-
-    std::cout << "processed: " << count << " lines of mesh data" << std::endl;
+    std::cout << "loaded: " << count << " lines of mesh data" << std::endl;
 
 }
 static void destroy_polygon_data(Polygon& poly)

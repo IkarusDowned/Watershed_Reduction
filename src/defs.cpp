@@ -32,3 +32,9 @@ long Vertex::operator*(const Vertex& other) const
 {
     return (_x * other._x) + (_y * other._y);
 }
+
+std::ostream& operator <<(std::ostream& stream,const Vertex& v)
+{
+    stream << "(" << v._x << "," << v._y << ")";
+    return stream;
+}

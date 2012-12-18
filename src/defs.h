@@ -1,6 +1,8 @@
 #ifndef DEFS_H_INCLUDED
 #define DEFS_H_INCLUDED
 #include <vector>
+#include <ostream>
+
 struct Mesh;
 struct Polygon;
 struct Vertex;
@@ -36,7 +38,10 @@ struct Vertex {
     Vertex operator-(const Vertex& other) const;
     Vertex operator+(const Vertex& other) const;
     long operator*(const Vertex& other) const;    //dot product
+    friend std::ostream& operator <<(std::ostream& stream,const Vertex& v);
+
 };
+
 
 typedef Mesh Level2;
 typedef Polygon Level6;

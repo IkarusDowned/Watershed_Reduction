@@ -24,4 +24,9 @@ double distance(const Vertex& a, const Vertex& b)
     return ::sqrt(distance_squared(a,b));
 }
 
+double magnitude(const Vertex& x)
+{
+    return ::sqrt((x._x) * (x._x) + (x._y) * (x._y));
+}
+
 }

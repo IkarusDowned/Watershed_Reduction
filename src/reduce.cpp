@@ -33,7 +33,7 @@ static inline void _debug_equal(Line& line)
     }
 
 }
-
+/*
 std::list<Line> make_line_list(const Polygon& poly)
 {
     const std::vector<Vertex*>& vertexes = poly._vertexes;
@@ -54,6 +54,8 @@ std::list<Line> make_line_list(const Polygon& poly)
     }
     return lines;
 }
+*/
+/*
 std::list<Line> detect_mesh_edges(const Mesh& mesh)
 {
     const std::vector<Polygon*>& polygons = mesh._polygons;
@@ -122,13 +124,14 @@ std::list<Line> detect_mesh_edges(const Mesh& mesh)
     }
     //lines.remove_if(count_not_1);
     std::list<Line>::iterator end = lines.end();
-    /*
+
     for(std::list<Line>::iterator itr = lines.begin(); itr != end; ++itr)
     {
         Line& l = *itr;
         std::cout << "\tstart:(" << l._start._x << "," << l._start._y <<") end:(" << l._end._x << "," << l._end._y << ")" << std::endl;
     }
-    */
+
     std::cout << "total lines remaining: " << lines.size() << std::endl;
     return lines;
 }
+*/

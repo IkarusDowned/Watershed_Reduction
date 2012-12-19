@@ -19,20 +19,17 @@ struct BoundingBox {
 struct Polygon {
     Mesh* _parent;
     unsigned long _level_6_id;
-    std::vector<Vertex*> _vertexes;
+    std::vector<size_t> _vert_indexes;
     BoundingBox _box;
 };
 
 struct Vertex {
-    Polygon* _parent;
     long _x;
     long _y;
+    size_t _index;
     bool operator==(const Vertex& other) const
     {
-        bool x_equal, y_equal;
-        x_equal = other._x == _x;
-        y_equal = other._y == _y;
-        return x_equal && y_equal;
+        return (_x == other._x) && (_y == other._y) ? true : false;
 
     }
     Vertex operator-(const Vertex& other) const;
@@ -42,7 +39,7 @@ struct Vertex {
 
 };
 
-
+extern std::vector<Vertex> verticies;
 typedef Mesh Level2;
 typedef Polygon Level6;
 
@@ -53,6 +50,6 @@ struct Line {
 };
 
 void AttachPolyToMesh(Mesh& mesh, Polygon& poly);
-void AttachVertToPoly(Polygon& poly, Vertex& vertex);
+//void AttachVertToPoly(Polygon& poly, Vertex& vertex);
 
 #endif // DEFS_H_INCLUDED

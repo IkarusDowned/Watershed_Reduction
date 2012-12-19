@@ -58,7 +58,7 @@ int main(int args, char* argv[])
     //construct the mesh tree
     ::construct_meshs(meshes,infile);
 
-    /*
+
     Watersheds::iterator end = meshes.end();
     std::cout << "Available level 1 meshes:" << std::endl;
     for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
@@ -72,21 +72,23 @@ int main(int args, char* argv[])
         for(size_t i = 0; i < l; ++i)
         {
             Level6 *level6 = level2->_polygons[i];
-            std::cout << "\t\t\t" << level6->_level_6_id << std::endl;
+            std::cout << "\t\t\t" << level6->_level_6_id << " with " << level6->_vert_indexes.size() << " verts " << std::endl;
 
         }
 
 
 
     }
-    */
 
-    Watersheds::iterator end = meshes.end();
+
+    //todo: ITS TOO SLOW. the log is sound, tests are working. time to optimize
     /*
+    Watersheds::iterator end = meshes.end();
+
     for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
         do_tjunction_elimination(*itr->second);
     std::cout << "Generate per level 2 edges" << std::endl;
-    */
+
     for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
     {
         std::cout << "For mesh " << itr->first << ":" << std::endl;
@@ -94,7 +96,7 @@ int main(int args, char* argv[])
         std::list<Line> lines = detect_mesh_edges(*level2);
 
     }
-
+    */
     ::destroy_mesh_data(meshes);
 
     return 0;

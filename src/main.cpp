@@ -54,6 +54,7 @@ int main(int args, char* argv[])
         std::cerr << "Error opening output file: " << output << std::endl;
     }
 
+    freopen("stderr.txt","w",stdout);
     Watersheds meshes;
     //construct the mesh tree
     ::construct_meshs(meshes,infile);
@@ -73,6 +74,13 @@ int main(int args, char* argv[])
         {
             Level6 *level6 = level2->_polygons[i];
             std::cout << "\t\t\t" << level6->_level_6_id << " with " << level6->_vert_indexes.size() << " verts " << std::endl;
+            /*
+            const size_t V = level6->_vert_indexes.size();
+            for(size_t v = 0; v < V; ++v)
+            {
+                std::cout << "\t\t\t\t" <<  verticies[level6->_vert_indexes[v]] << std::endl;
+            }
+            */
 
         }
 

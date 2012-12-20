@@ -265,13 +265,14 @@ static void load_verts_to_map(std::map<std::string,Vertex>& vert_map,std::ifstre
         {
             if(count % 10000 == 0) std::cout << "Working..." << std::endl;
             std::string key = split_line[ET_X] + split_line[ET_Y];
+            //only add if this vertex hasn't been seen before
             if(vert_map.find(key) == vert_map.end())
             {
                 Vertex vert;
                 vert._x = atol(split_line[ET_X].c_str());
                 vert._y = atol(split_line[ET_Y].c_str());
                 vert._index = index;
-                vert_map[split_line[ET_X] + split_line[ET_Y]] = vert;
+                vert_map[key] = vert;
                 ++index;
             }
 
@@ -345,6 +346,7 @@ static void load_meshes(Watersheds& mesh_map,std::ifstream& input,std::map<std::
         {
             if(count % 10000 == 0) std::cout << "Working..." << std::endl;
             unsigned short this_level_1_id = atoi(split_line[LEVEL_1].c_str());
+
             if(count == 0)
             {
                 //first run, setup the first mesh and polygon
@@ -358,6 +360,7 @@ static void load_meshes(Watersheds& mesh_map,std::ifstream& input,std::map<std::
             {
                 unsigned short this_level_2_id = atoi(split_line[LEVEL_2].c_str());
                 unsigned long this_level_6_id = strtoul(split_line[LEVEL_6].c_str(),NULL,0);
+                unsigned long this_et_order = strtoul(split_line[ET_ORDER].c_str(),NULL,0);
                 //new mesh, create a new mesh and start a new polygon
                 if(this_level_2_id != current_mesh->_level_2_id)
                 {
@@ -372,7 +375,7 @@ static void load_meshes(Watersheds& mesh_map,std::ifstream& input,std::map<std::
                 }
                 //new polygon, same mesh. associate the polygon to the mesh,
                 //add the new vertex to it
-                if(this_level_6_id != current_polygon->_level_6_id)
+                if(this_et_order == 0)
                 {
                     //construct_box(*current_polygon);
                     current_polygon = new Polygon();
@@ -395,8 +398,6 @@ static void load_meshes(Watersheds& mesh_map,std::ifstream& input,std::map<std::
                     exit(1);
                 }
                 current_polygon->_vert_indexes.push_back(vert_map[split_line[ET_X] + split_line[ET_Y]]._index);
-
-
             }
             ++count;
         }
@@ -434,107 +435,14 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
     std::cout << "verticies count: " << verticies.size() << std::endl;
     std::cout << "create boundin volumes for polygon collision testing" << std::endl;
     //construct the bounding boxes for each polygon
-
-    //TODO error here. possibly loading bad vertex values
     Watersheds::iterator ws_end = mesh_map.end();
     for(Watersheds::iterator itr = mesh_map.begin();itr !=  ws_end; ++itr)
     {
         construct_boxes(itr->second->_polygons);
     }
 
-    /*
-    std::cout << "Attempting to construct initial meshes" << std::endl;
-    std::string line = "";
-    long count = 0;
-    Mesh* current_mesh;
-    Polygon* current_polygon;
-    std::getline(input,line);   //discard the first line, which is assumed to be the column information
-    while(!input.eof())
-    {
-        std::getline(input,line);
-
-        std::vector<std::string> split_line = split(line);
-        if(split_line.size() >= FIELDS_SIZE)
-        {
-            if(count % 10000 == 0) std::cout << "Working..." << std::endl;
-            unsigned short this_level_1_id = atoi(split_line[LEVEL_1].c_str());
-            if(count == 0)
-            {
-                //first run, setup the first mesh and polygon
-                current_mesh = new Mesh();
-                current_polygon = new Polygon();
-                construct_mesh(*current_mesh,*current_polygon,split_line);
-
-                //add to the mesh_list
-                mesh_map[this_level_1_id] = current_mesh;
-
-            }
-            else
-            {
-                unsigned short this_level_2_id = atoi(split_line[LEVEL_2].c_str());
-                unsigned long this_level_6_id = strtoul(split_line[LEVEL_6].c_str(),NULL,0);
-                //new mesh, create a new mesh and start a new polygon
-                if(this_level_2_id != current_mesh->_level_2_id)
-                {
-                    current_mesh = new Mesh();
-                    //construct_box(*current_polygon);
-                    current_polygon = new Polygon();
-                    construct_mesh(*current_mesh,*current_polygon,split_line);
-                    mesh_map[this_level_1_id] = current_mesh;
-                    //this line is processed, move on to next line
-                    ++count;
-                    continue;
-                }
-                //new polygon, same mesh. associate the polygon to the mesh,
-                //add the new vertex to it
-                if(this_level_6_id != current_polygon->_level_6_id)
-                {
-                    //construct_box(*current_polygon);
-                    current_polygon = new Polygon();
-                    current_polygon->_level_6_id = this_level_6_id;
-                    Vertex* vert = new Vertex();
-                    vert->_x = atol(split_line[ET_X].c_str());
-                    vert->_y = atol(split_line[ET_Y].c_str());
-                    AttachVertToPoly(*current_polygon,*vert);
-                    current_mesh->_polygons.push_back(current_polygon);
-                    //this line is processed, move to next line
-                    ++count;
-                    continue;
-                }
-
-                //same mesh, same polygon; new vertex
-                Vertex* vert = new Vertex();
-                vert->_x = atol(split_line[ET_X].c_str());
-                vert->_y = atol(split_line[ET_Y].c_str());
-                AttachVertToPoly(*current_polygon,*vert);
-
-            }
-            ++count;
-        }
-
-    }
-
-    //construct the bounding boxes for each polygon
-    Watersheds::iterator end = mesh_map.end();
-    for(Watersheds::iterator itr = mesh_map.begin();itr != end; ++itr)
-    {
-        construct_boxes(itr->second->_polygons);
-    }
-    std::cout << "loaded: " << count << " lines of mesh data" << std::endl;
-    */
-
 }
-static void destroy_polygon_data(Polygon& poly)
-{
-    /*
-    const size_t N = poly._vertexes.size();
-    for(size_t i = 0; i < N; ++i)
-    {
-        delete poly._vertexes[i];
-        poly._vertexes[i] = NULL;
-    }
-    */
-}
+
 void destroy_mesh_data(Watersheds& mesh_map)
 {
     Watersheds::iterator end = mesh_map.end();
@@ -544,7 +452,6 @@ void destroy_mesh_data(Watersheds& mesh_map)
         const size_t J = m->_polygons.size();
         for(size_t j = 0; j < J; ++j)
         {
-            destroy_polygon_data(*(m->_polygons[j]));
             delete m->_polygons[j];
             m->_polygons[j] = NULL;
         }

@@ -22,187 +22,27 @@ enum FIELDS {
 };
 inline static void split(std::vector<std::string>& result, const std::string& line, char delim = ',')
 {
-    std::stringstream ss(line);
-    std::string item;
+    static std::stringstream ss;
+    static std::string item;
+    ss.clear();
+    ss.str(line);
+
     while(std::getline(ss,item,delim))
         result.push_back(item);
 }
 inline static std::vector<std::string> split(const std::string& line,char delim = ',')
 {
-    std::vector<std::string> res;
+    static std::vector<std::string> res;
+    res.clear();
     split(res,line,delim);
     return res;
 }
 
-
-
-/*
-
-
-
-
-//checks to see if there is actually a possibly t-junction between the point and the line
-static bool possible_tjunc(const Line& a, const Vertex& q)
-{
-    //check if the vertex is the end points. if it is, then return false
-    if(a._start == q || a._end == q)
-        return false;
-    const Vertex& p_1 = a._start;
-    const Vertex& p_2 = a._end;
-    const Vertex q_minus_p_1 = q - p_1;
-    const Vertex p_2_minus_p_1 = p_2 - p_1;
-    const double q_minus_squared = square(q_minus_p_1);
-    const double top = square(q_minus_p_1 * p_2_minus_p_1);
-    const double bottom = square(p_2_minus_p_1);
-
-    double d_squared = q_minus_squared - top / bottom;
-    if(d_squared >= TJUNC_ERR_SQR)
-        return false;
-    double t = ((double)(q_minus_p_1 * p_2_minus_p_1)) / vertex::magnitude(p_2_minus_p_1);
-    if (t < TJUNC_ERR || t > (vertex::magnitude(p_2_minus_p_1) - TJUNC_ERR))
-        return false;
-    return true;
-
-}
-//on tjunction
-//1) modify the line to end at x
-//2) createa  new line at
-static void elimate_tjunction(std::list<Line>& lines,std::list<Line>::iterator& itr,Line* a, const Vertex& x)
-{
-
-    Vertex temp = a->_end;
-    //split and create
-    a->_end = x;
-    Line l;
-    l._start = x;
-    l._end = temp;
-    l._touch_count = 0;
-    ++itr;  //advance ahead, since insert will put behind
-    lines.insert(itr,l);
-    --itr;  //move back. we are now at l
-    --itr;  //move back, we are now at our original position;
-
-}
-
-static void reconstruct(Polygon& poly,std::list<Line>& lines)
-{
-    //clear the current vertex list. don't forget to delete the data
-    std::vector<Vertex*>& verts = poly._vertexes;
-    const size_t N = verts.size();
-    for(size_t i = 0; i < N; ++i)
-        delete verts[i];
-    verts.clear();
-
-    //for each line, we put it back into the vertex
-    //with start->end order.
-    //only add the first
-    std::list<Line>::iterator end = lines.end();
-    std::list<Line>::iterator begin = lines.begin();
-    for(std::list<Line>::iterator itr = begin;itr != end;++itr)
-    {
-        Vertex* v = new Vertex();
-        *v = (*itr)._start;
-        AttachVertToPoly(poly,*v);
-
-    }
-    std::cout << "\tpoly:" << poly._level_6_id << std::endl;
-    for(size_t i = 0; i < verts.size(); ++i)
-    {
-        const Vertex& v = *verts[i];
-        std::cout << "(" << v._x << "," << v._y << ")" << std::endl;
-    }
-
-
-}
-static void do_tjunc_elimination(Polygon* a, Polygon* x)
-{
-    //generate the line list for a
-    std::list<Line> lines = make_line_list(*a);
-    size_t initial_size = lines.size();
-    //loop thru each line, checking if a tjunction test is even neccesary
-    //note, we might add lines here, so you cannnot use const the end iteratr
-    for(std::list<Line>::iterator itr = lines.begin(); itr != lines.end(); ++itr)
-    {
-        Line& line = *itr;
-        std::vector<Vertex*>& x_verts = x->_vertexes;
-        const size_t N = x_verts.size();
-        for(size_t i = 0; i < N; ++i)
-        {
-            Vertex& X = *x_verts[i];
-            //std::cout << a->_level_6_id << ": checking line: " << line._start << line._end << " against vertex " << X << "...";
-            if(possible_tjunc(line,X))
-            {
-                elimate_tjunction(lines,itr,&line,X);
-                std::cout << "elminating T-junction" << std::endl;
-            }
-
-        }
-    }
-    //recreate the vertex vector if there was a reconstruction
-    if(initial_size != lines.size())
-    {
-        std::cout << "\t\t\treconstructing..." << std::endl;
-        reconstruct(*a,lines);
-    }
-}
-
-
-void do_tjunction_elimination(Mesh& mesh)
-{
-
-    std::vector<Polygon*> polygons = mesh._polygons;
-    const size_t N = polygons.size();
-    size_t collisions = 0;
-    for(size_t i = 0; i < N; ++i)
-    {
-        Polygon& p1 = *polygons[i];
-        for(size_t j = i+1; j < N; ++j)
-        {
-            Polygon& p2 = *polygons[j];
-            if(collision(p1._box,p2._box))
-            {
-                //do p1->p2 T-junction elimination
-                do_tjunc_elimination(&p1,&p2);
-                //do p2->p1 T-junction elimination
-                do_tjunc_elimination(&p2,&p1);
-                ++collisions;
-                std::cout << "\t\t\t\tcollision between: " << p1._level_6_id << " and " << p2._level_6_id << std::endl;
-            }
-
-
-        }
-    }
-    //std::cout << "\t\t\tcollisions: " << collisions << std::endl;
-
-}
-*/
-static void load_verts(std::ifstream& input)
-{
-    std::string line = "";
-    std::getline(input,line);   //discard first line, assume this is the column information
-    std::vector<std::string> split_line;
-    long count = 0;
-    while(!input.eof())
-    {
-        std::getline(input,line);
-        split_line.clear();
-        split(split_line,line);
-        if(split_line.size() >= FIELDS_SIZE)
-        {
-            if(count % 10000 == 0) std::cout << "Working..." << std::endl;
-            Vertex vert;
-            vert._x = atol(split_line[ET_X].c_str());
-            vert._y = atol(split_line[ET_Y].c_str());
-            verticies.push_back(vert);
-            ++count;
-        }
-    }
-}
 static void load_verts_to_map(std::map<std::string,Vertex>& vert_map,std::ifstream& input)
 {
-    std::string line = "";
+    static std::string line = "";
     std::getline(input,line);   //discard first line, assume this is the column information
-    std::vector<std::string> split_line;
+    static std::vector<std::string> split_line;
     size_t count = 0;
     size_t index = 0;
     while(!input.eof())
@@ -246,8 +86,10 @@ static void construct_mesh(Mesh& mesh, Polygon& poly, std::vector<std::string>& 
 }
 static void construct_box(Polygon& polygon)
 {
-    long min_x,min_y;
-    long max_x,max_y;
+    static long min_x;
+    static long min_y;
+    static long max_x;
+    static long max_y;
     std::vector<size_t>& indexes = polygon._vert_indexes;
     if(indexes.size() == 0)
         return;
@@ -280,9 +122,9 @@ inline static void construct_boxes(std::vector<Polygon*>& polygons)
 
 static void load_meshes(Watersheds& mesh_map,std::ifstream& input,std::map<std::string,Vertex>& vert_map)
 {
-    std::string line = "";
-    long count = 0;
-    std::vector<std::string> split_line;
+    static std::string line = "";
+    static long count = 0;
+    static std::vector<std::string> split_line;
     Mesh* current_mesh = NULL;
     Polygon* current_polygon = NULL;
     std::getline(input,line);   //discard the first line, which is assumed to be the column information
@@ -293,7 +135,7 @@ static void load_meshes(Watersheds& mesh_map,std::ifstream& input,std::map<std::
         split(split_line,line);
         if(split_line.size() >= FIELDS_SIZE)
         {
-            if(count % 10000 == 0) std::cout << "Working..." << std::endl;
+            if(count % 10000 == 0) std::cout << "Loading..." << std::endl;
             unsigned short this_level_1_id = atoi(split_line[LEVEL_1].c_str());
 
             if(count == 0)
@@ -364,15 +206,15 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
 {
 
     //first pass, gather all of the vertex information
-    std::cout << "Pass one: load vertex information into map" << std::endl;
+    //std::cout << "Pass one: load vertex information into map" << std::endl;
     std::map<std::string,Vertex> vert_map;
     load_verts_to_map(vert_map,input);
     //reset stream
     input.clear();
     input.seekg(0,std::ios_base::beg);
-    std::cout << "Attempting to construct initial meshes" << std::endl;
+    //std::cout << "Attempting to construct initial meshes" << std::endl;
     load_meshes(mesh_map,input,vert_map);
-    std::cout << "set vertex vector" << std::endl;
+    //std::cout << "set vertex vector" << std::endl;
     //load all the verts into the vector
     verticies.clear();  //defensive clear
     std::map<std::string,Vertex>::iterator end = vert_map.end();
@@ -381,8 +223,8 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
         verticies.push_back(itr->second);
     //sort by their index
     std::sort(verticies.begin(),verticies.end(),comp_by_index);
-    std::cout << "verticies count: " << verticies.size() << std::endl;
-    std::cout << "create boundin volumes for polygon collision testing" << std::endl;
+    //std::cout << "verticies count: " << verticies.size() << std::endl;
+    //std::cout << "create boundin volumes for polygon collision testing" << std::endl;
     //construct the bounding boxes for each polygon
     Watersheds::iterator ws_end = mesh_map.end();
     for(Watersheds::iterator itr = mesh_map.begin();itr !=  ws_end; ++itr)

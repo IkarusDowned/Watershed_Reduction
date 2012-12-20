@@ -8,6 +8,7 @@
 #include "defs.h"
 #include "watershed.hpp"
 #include "reduce.hpp"
+#include "perf.hpp"
 using namespace std;
 static char input[257] = {'\0'};
 static char output[257] = {'\0'};
@@ -35,6 +36,7 @@ static void print(std::vector<Polygon*>& polygons)
 }
 int main(int args, char* argv[])
 {
+
 
     if(args < 3)
     {
@@ -101,11 +103,13 @@ int main(int args, char* argv[])
 
 
     }
+    double before = getMillisecondsNow();
     for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
     {
         reduce(itr->second->_polygons);
         //print(itr->second->_polygons);
     }
+    std::cout << "reduction took : " << getMillisecondsNow()-before << " seconds" << std::endl;
 
     //todo: ITS TOO SLOW. the logic is sound, tests are working. time to optimize
     /*

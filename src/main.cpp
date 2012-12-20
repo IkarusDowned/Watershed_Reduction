@@ -20,6 +20,19 @@ static int GetFileInformation()
 
     return 0;
 }
+static void print(std::vector<Polygon*>& polygons)
+{
+    for(size_t i = 0; i < polygons.size();++i)
+    {
+        std::cout << "polygon " << polygons[i]->_level_6_id << ":" << std::endl;
+        for(size_t v = 0; v < polygons[i]->_vert_indexes.size();++v)
+        {
+            size_t from = polygons[i]->_vert_indexes[v];
+            size_t to  = polygons[i]->_vert_indexes[(v+1) % polygons[i]->_vert_indexes.size()];
+            std::cout << verticies[from] << "," << verticies[to] << std::endl;
+        }
+    }
+}
 int main(int args, char* argv[])
 {
 
@@ -54,13 +67,14 @@ int main(int args, char* argv[])
         std::cerr << "Error opening output file: " << output << std::endl;
     }
 
-    freopen("stderr.txt","w",stdout);
+    freopen("stdout.txt","w",stdout);
     Watersheds meshes;
     //construct the mesh tree
     ::construct_meshs(meshes,infile);
 
 
     Watersheds::iterator end = meshes.end();
+
     std::cout << "Available level 1 meshes:" << std::endl;
     for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
     {
@@ -87,9 +101,13 @@ int main(int args, char* argv[])
 
 
     }
+    for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
+    {
+        reduce(itr->second->_polygons);
+        //print(itr->second->_polygons);
+    }
 
-
-    //todo: ITS TOO SLOW. the log is sound, tests are working. time to optimize
+    //todo: ITS TOO SLOW. the logic is sound, tests are working. time to optimize
     /*
     Watersheds::iterator end = meshes.end();
 
@@ -105,6 +123,8 @@ int main(int args, char* argv[])
 
     }
     */
+
+
     ::destroy_mesh_data(meshes);
 
     return 0;

@@ -27,14 +27,12 @@ struct Vertex {
     long _x;
     long _y;
     size_t _index;
-    bool operator==(const Vertex& other) const
-    {
-        return (_x == other._x) && (_y == other._y) ? true : false;
-
-    }
     Vertex operator-(const Vertex& other) const;
     Vertex operator+(const Vertex& other) const;
-    long operator*(const Vertex& other) const;    //dot product
+    inline unsigned long operator*(const Vertex& other) const
+    {
+        return (_x * other._x) + (_y * other._y);
+    }
     friend std::ostream& operator <<(std::ostream& stream,const Vertex& v);
 
 };

@@ -4,6 +4,10 @@
 #include <list>
 #include "defs.h"
 /**
+*** reduce the list of polygons down to a single polygon
+**/
+Polygon reduce(std::vector<Polygon*>& polygons);
+/**
 *** reduce the mesh down to its edges
 **/
 std::list<Line> detect_mesh_edges(const Mesh& mesh);

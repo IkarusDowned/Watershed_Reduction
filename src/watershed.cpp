@@ -10,7 +10,6 @@
 #include <iostream> //for debuging
 
 #include "reduce.hpp"
-#include "math.hpp"
 
 enum FIELDS {
     LEVEL_1,
@@ -38,60 +37,10 @@ inline static std::vector<std::string> split(const std::string& line,char delim 
 
 
 /*
-static void construct_box(Polygon& polygon)
-{
-    long min_x,min_y;
-    long max_x,max_y;
-    std::vector<Vertex*>& verts = polygon._vertexes;
-    if(verts.size() == 0)
-        return;
-    min_x = max_x = verts[0]->_x;
-    min_y = max_y = verts[0]->_y;
-    for(size_t i = 1; i < verts.size(); ++i)
-    {
-        Vertex& v = *verts[i];
-        if(min_x > v._x) min_x = v._x;
-        if(max_x < v._x) max_x = v._x;
-        if(min_y > v._y) min_y = v._y;
-        if(max_y < v._y) max_y = v._y;
-    }
-    polygon._box._max_x = max_x;
-    polygon._box._max_y = max_y;
-    polygon._box._min_x = min_x;
-    polygon._box._min_y = min_y;
-    //std::cout << "box for " << polygon._level_6_id << " created with: " << min_x << ":" << max_x << "," << min_y << ":" << max_y << std::endl;
-}
-inline static void construct_boxes(std::vector<Polygon*>& polygons)
-{
 
-    const size_t N = polygons.size();
-    for(size_t i = 0; i < N; ++i)
-        construct_box(*polygons[i]);
-}
-static bool collision(BoundingBox& a, BoundingBox& b)
-{
-    //check x values
-    if(a._min_x > b._min_x && a._min_x > b._max_x)
-        return false;
-    if(a._max_x < b._min_x && a._max_x < b._max_x)
-        return false;
-    //check y values
-    if(a._min_y > b._min_y && a._min_y > b._max_y)
-        return false;
-    if(a._max_y < b._min_y && a._max_y < b._max_y)
-        return false;
-    return true;
-}
-static const double TJUNC_ERR = 1.0;
-static const double TJUNC_ERR_SQR = TJUNC_ERR * TJUNC_ERR;
-inline static double square(const Vertex& v)
-{
-    return static_cast<double>(v * v);
-}
-inline static double square(double x)
-{
-    return x * x;
-}
+
+
+
 //checks to see if there is actually a possibly t-junction between the point and the line
 static bool possible_tjunc(const Line& a, const Vertex& q)
 {
@@ -334,8 +283,8 @@ static void load_meshes(Watersheds& mesh_map,std::ifstream& input,std::map<std::
     std::string line = "";
     long count = 0;
     std::vector<std::string> split_line;
-    Mesh* current_mesh;
-    Polygon* current_polygon;
+    Mesh* current_mesh = NULL;
+    Polygon* current_polygon = NULL;
     std::getline(input,line);   //discard the first line, which is assumed to be the column information
     while(!input.eof())
     {

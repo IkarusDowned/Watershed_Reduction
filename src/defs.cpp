@@ -30,10 +30,7 @@ Vertex Vertex::operator+(const Vertex& other) const
     res._y += other._y;
     return res;
 }
-long Vertex::operator*(const Vertex& other) const
-{
-    return (_x * other._x) + (_y * other._y);
-}
+
 
 std::ostream& operator <<(std::ostream& stream,const Vertex& v)
 {

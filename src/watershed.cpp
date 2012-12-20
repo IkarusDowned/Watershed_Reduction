@@ -255,6 +255,7 @@ static void load_verts_to_map(std::map<std::string,Vertex>& vert_map,std::ifstre
     std::getline(input,line);   //discard first line, assume this is the column information
     std::vector<std::string> split_line;
     size_t count = 0;
+    size_t index = 0;
     while(!input.eof())
     {
         std::getline(input,line);
@@ -263,11 +264,17 @@ static void load_verts_to_map(std::map<std::string,Vertex>& vert_map,std::ifstre
         if(split_line.size() >= FIELDS_SIZE)
         {
             if(count % 10000 == 0) std::cout << "Working..." << std::endl;
-            Vertex vert;
-            vert._x = atol(split_line[ET_X].c_str());
-            vert._y = atol(split_line[ET_Y].c_str());
-            vert._index = count;
-            vert_map[split_line[ET_X] + split_line[ET_Y]] = vert;
+            std::string key = split_line[ET_X] + split_line[ET_Y];
+            if(vert_map.find(key) == vert_map.end())
+            {
+                Vertex vert;
+                vert._x = atol(split_line[ET_X].c_str());
+                vert._y = atol(split_line[ET_Y].c_str());
+                vert._index = index;
+                vert_map[split_line[ET_X] + split_line[ET_Y]] = vert;
+                ++index;
+            }
+
             ++count;
         }
     }
@@ -298,7 +305,8 @@ static void construct_box(Polygon& polygon)
     min_y = max_y = verticies[indexes[0]]._y;
     for(size_t i = 1; i < indexes.size(); ++i)
     {
-        volatile size_t index = indexes[i];
+        //std::cout << polygon._level_6_id << "\t" << i << std::endl;
+        size_t index = indexes[i];
         Vertex& v =verticies[index];
         if(min_x > v._x) min_x = v._x;
         if(max_x < v._x) max_x = v._x;

@@ -42,9 +42,18 @@ typedef Mesh Level2;
 typedef Polygon Level6;
 
 struct Line {
-    Vertex _start;
-    Vertex _end;
+    size_t _start_index;
+    size_t _end_index;
+    size_t _parent_poly_start_vert_index;
     unsigned long _touch_count;
+    inline bool operator==(const Line& other) const
+    {
+        if(_start_index == other._start_index && _end_index == other._end_index)
+            return true;
+        if(_start_index == other._end_index && _end_index == other._start_index)
+            return true;
+        return false;
+    }
 };
 
 void AttachPolyToMesh(Mesh& mesh, Polygon& poly);

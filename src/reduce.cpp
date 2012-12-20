@@ -6,6 +6,7 @@
 
 #include <string>
 #include <iostream>
+#include <algorithm>
 
 #include "math.hpp"
 
@@ -33,7 +34,34 @@ static inline bool is_t_junction(size_t p1_index, size_t p2_index, size_t q_inde
     return true;
 
 }
-static void do_tjunction_elimination(Polygon& a, Polygon&b)
+
+static void do_tjunction_elimination(Polygon& a,std::list<Line>& a_lines,std::vector<size_t>& b_indexes)
+{
+    std::list<Line>::iterator end = a_lines.end();
+    for(std::list<Line>::iterator itr = a_lines.begin(); itr != end; ++itr)
+    {
+        Line& line = *itr;
+        size_t p1_index = line._start_index;
+        size_t p2_index = line._end_index;
+        const size_t b_size = b_indexes.size();
+        for(size_t b_index = 0; b_index < b_size; ++b_index)
+        {
+            size_t q_index = b_indexes[b_index];
+            //if the point is on the line endpoints, skip it
+            if(p1_index == q_index || p2_index == q_index)
+                continue;
+            //otherwise, do a full t-junction test
+            if(is_t_junction(p1_index,p2_index,q_index) == false)
+                continue;
+            //at this point, we know we have a T-junction. we need to insert
+            //the vertex in between p1 and p2.
+            //this means, insert into the location in front of line's parent start index
+            a._vert_indexes.insert(a._vert_indexes.begin()+line._parent_poly_start_vert_index+1,q_index);
+        }
+
+    }
+}
+static void do_tjunction_elimination(Polygon& a, Polygon& b)
 {
     //iterate through a in vertex pairs, as the listed order indicates the
     //line draw order. on the last vertex, wrap around to 0th vertex
@@ -80,8 +108,90 @@ static bool collision(const BoundingBox& a, const BoundingBox& b)
         return false;
     return true;
 }
+static inline void eliminate_same_lines(std::list<Line>& lines1,std::list<Line>& lines2)
+{
+    //a relatively simple double-traverse that checks the equality of each line
+    //and removes from both lists if equal. There may be a better way to do this...
+    for(std::list<Line>::iterator itr = lines1.begin(); itr != lines1.end(); ++itr)
+    {
+        Line& line1 = *itr;
+        std::list<Line>::iterator l2_itr = std::find(lines2.begin(),lines2.end(),line1);
+        if(l2_itr != lines2.end())
+        {
+            //std::cout << "eliminated: " << verticies[line1._start_index] << verticies[line1._end_index] << std::endl;
+            lines2.erase(l2_itr);
+            itr = lines1.erase(itr);
+            --itr;
+
+        }
+    }
+}
+static inline std::list<Line>* generate_lines(Polygon& polygon )
+{
+    std::list<Line>* lines = new std::list<Line>();
+    // generate the lines per polygon
+    std::vector<size_t>& poly_indexes = polygon._vert_indexes;
+    const size_t N = poly_indexes.size();
+    for(size_t i= 0; i < N; ++i)
+    {
+        size_t p1_index,p2_index;
+        p1_index = poly_indexes[i];
+        p2_index = poly_indexes[(i + 1)  % N];
+        Line l;
+        l._start_index = p1_index; l._end_index = p2_index;
+        l._parent_poly_start_vert_index = i;
+        lines->push_back(l);
+    }
+    return lines;
+}
 Polygon reduce(std::vector<Polygon*>& polygons)
 {
+    //create an initial list of lines for each polygon
+    std::vector<std::list<Line>* > polygon_lines;
+    const size_t P = polygons.size();
+    for(size_t c = 0; c < P; ++c)
+    {
+        std::list<Line>* lines = generate_lines(*polygons[c]);
+        polygon_lines.push_back(lines);
+    }
+
+    //now go through the line lists, and do a remove from both sets if
+    //the exist in each
+    for(size_t c = 0; c < P; ++c)
+    {
+        std::list<Line>& lines1 = *polygon_lines[c];
+        for(size_t i = c+1; i < P; ++i)
+        {
+            std::list<Line>& lines2 = *polygon_lines[i];
+            eliminate_same_lines(lines1,lines2);
+        }
+    }
+    //the remaining lines a "edges." this includes interior edges which are
+    //on the same line as a different polygon but dont match its length,
+    // or "dangling" edges
+
+    //now we go through each line list,
+    //doing t-junction elimination of line against polygons
+    for(size_t c = 0; c < P; ++c)
+    {
+        std::list<Line>& lines1 = *polygon_lines[c];
+        //empty lines lists can be removed from checking completely
+        if(lines1.size() == 0)
+            continue;
+        Polygon& a = *polygons[c];
+        for(size_t n = 0; n < P; ++n)
+        {
+            //don't compare yourself, duh
+            if( n != c)
+            {
+                Polygon& x = *polygons[n];
+                do_tjunction_elimination(a,lines1,x._vert_indexes);
+            }
+
+        }
+        std::cout << "Reduced: " << a._level_6_id << std::endl;
+    }
+    /*
     //iterate through every polygon, comparing it against the other polygons
     //optimally, we would rather make a single pass through the polygons.
     //unfortunatly, there are couple cases where you do need to in fact do a per-polygon check
@@ -106,136 +216,13 @@ Polygon reduce(std::vector<Polygon*>& polygons)
         }
         std::cout << "Reduced: " << a._level_6_id << std::endl;
     }
+    */
+    //TODO: reduction code
 
+    for(size_t c = 0; c < P; ++c)
+    {
+        delete polygon_lines[c];
+    }
     return Polygon();
 }
-/*
-static bool count_not_1(const Line& l)
-{
-    return l._touch_count > 1 ? true : false;
-}
-static std::list<Line>::iterator exists(std::list<Line>& lines, const Line& line)
-{
-    std::list<Line>::iterator itr = lines.begin();
-    std::list<Line>::iterator end = lines.end();
-    for(;itr != end; ++itr)
-    {
-        Line& l = *itr;
-        if((l._start == line._start && l._end == line._end) || (l._start == line._end && l._end == line._start))
-            return itr;
 
-    }
-    return end;
-}
-static inline void _debug_equal(Line& line)
-{
-    if(line._end == line._start)
-    {
-        std::cout << "oops, problem with this line..." << std::endl;
-        exit(1);
-    }
-
-}
-*/
-/*
-std::list<Line> make_line_list(const Polygon& poly)
-{
-    const std::vector<Vertex*>& vertexes = poly._vertexes;
-    const size_t V = vertexes.size();
-    std::list<Line> lines;
-    for(size_t i = 0; i < V; ++i)
-    {
-        Line l;
-        l._touch_count = 0;
-        l._end._parent = l._start._parent = NULL;
-        l._start = *vertexes[i];
-        //last vertex in list, wrap around
-        if(i == (V-1))
-            l._end = *vertexes[0];
-        else
-            l._end = *vertexes[i+1];
-        lines.push_back(l);
-    }
-    return lines;
-}
-*/
-/*
-std::list<Line> detect_mesh_edges(const Mesh& mesh)
-{
-    const std::vector<Polygon*>& polygons = mesh._polygons;
-    const size_t N = polygons.size();
-    std::list<Line> lines;
-    if(N != 0)
-    {
-        //go through every polygon, constructing a line
-        // for each pair of vertexes.
-        //the vertexes are loaded in draw order.
-        //and the last vertex is guaranteed to connect to the first
-
-        for(size_t i = 0; i < N; ++i)
-        {
-            const Polygon& poly = *polygons[i];
-            const std::vector<Vertex*>& vertexes = poly._vertexes;
-            const size_t V = vertexes.size();
-            for(size_t j = 0; j < V; ++j)
-            {
-                //last vertex, so construct a line from the first vertex as the end point
-                //and this one
-                if(j == (V-1))
-                {
-                    Line l;
-                    l._touch_count = 1;
-                    l._end = *vertexes[0];
-                    l._start = *vertexes[j];
-                    l._end._parent = l._start._parent = NULL;
-                    //_debug_equal(l);
-                    //search and either insert or delete the line
-                    std::list<Line>::iterator itr = exists(lines,l);
-                    if(itr != lines.end())
-                        lines.erase(itr);
-                    else
-                        lines.push_back(l);
-                        //++(*itr)._touch_count;
-                    //else
-                        //lines.push_back(l);
-
-                }
-                else
-                {
-                    Line l;
-                    l._touch_count = 1;
-                    l._start = *vertexes[j];
-                    l._end = *vertexes[j+1];
-                    l._end._parent = l._start._parent = NULL;
-                    //_debug_equal(l);
-                    //serach and either insert or delete the line
-                    std::list<Line>::iterator itr = exists(lines,l);
-                    if(itr != lines.end())
-                        lines.erase(itr);
-                    else
-                        lines.push_back(l);
-                        //++(*itr)._touch_count;
-                    //else
-                        //lines.push_back(l);
-
-
-                }
-
-            }
-        }
-
-
-    }
-    //lines.remove_if(count_not_1);
-    std::list<Line>::iterator end = lines.end();
-
-    for(std::list<Line>::iterator itr = lines.begin(); itr != end; ++itr)
-    {
-        Line& l = *itr;
-        std::cout << "\tstart:(" << l._start._x << "," << l._start._y <<") end:(" << l._end._x << "," << l._end._y << ")" << std::endl;
-    }
-
-    std::cout << "total lines remaining: " << lines.size() << std::endl;
-    return lines;
-}
-*/

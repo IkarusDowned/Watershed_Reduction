@@ -194,9 +194,36 @@ static void load_meshes(Watersheds& mesh_map,std::ifstream& input,std::map<std::
         }
     }
 
-
 }
+inline static bool is_ccw(size_t a_index, size_t b_index, size_t c_index)
+{
+    const Vertex ba = verticies[b_index] - verticies[a_index];  //these are really vectors, but we can use the same class in this case
+    const Vertex ca = verticies[c_index] - verticies[a_index];
 
+    //take the cross product. if the result is positive, we have CCW winding
+    if((ba._x * ca._y - ca._x * ba._y) > 0)
+        return true;
+    return false;
+}
+static void rewind_ccw(std::vector<Polygon*>& polygons)
+{
+    const size_t N = polygons.size();
+    for(size_t i = 0; i < N; ++i)
+    {
+        Polygon& poly = *polygons[i];
+        if(poly._vert_indexes.size() < 3)
+        {
+            std::cerr << "Polygon is incomplete. needs at least one more vertex: " << poly._parent->_level_2_id <<":" << poly._level_6_id  << std::endl;
+            exit(1);
+        }
+
+        if(!is_ccw(poly._vert_indexes[0],poly._vert_indexes[1],poly._vert_indexes[2]))
+        {
+            std::cout << "Poly " <<  poly._parent->_level_2_id << ":" << poly._level_6_id << " rewound to CCW" << std::endl;
+            std::reverse(poly._vert_indexes.begin(),poly._vert_indexes.end());
+        }
+    }
+}
 static inline bool comp_by_index(const Vertex& a, const Vertex& b)
 {
     return a._index < b._index;
@@ -229,6 +256,12 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
     Watersheds::iterator ws_end = mesh_map.end();
     for(Watersheds::iterator itr = mesh_map.begin();itr !=  ws_end; ++itr)
     {
+        //we also want to check the winding. if they are not wound CCW, then reverse the list. why CCW?
+        //because the data is arbitraraly wound and i prefer CCW
+        rewind_ccw(itr->second->_polygons);
+        //at the end of this, all polygons follow the same winding.
+        //this is very valuable, because that means when we do edge detection,
+        //we only need to compare the end of the first line to the beginning of the second
         construct_boxes(itr->second->_polygons);
     }
 

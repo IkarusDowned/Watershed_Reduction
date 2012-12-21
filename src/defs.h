@@ -2,6 +2,8 @@
 #define DEFS_H_INCLUDED
 #include <vector>
 #include <ostream>
+#include <sstream>
+#include <string>
 
 struct Mesh;
 struct Polygon;
@@ -42,9 +44,27 @@ typedef Mesh Level2;
 typedef Polygon Level6;
 
 struct Line {
-    Vertex _start;
-    Vertex _end;
-    unsigned long _touch_count;
+    size_t _p1_index;
+    size_t _p2_index;
+    size_t _count;
+    std::string key() const
+    {
+        static std::stringstream ss;
+        ss.str("");
+        if(_p1_index < _p2_index)
+            ss << _p1_index << _p2_index;
+        else
+            ss << _p2_index << _p1_index;
+        return ss.str();
+    }
+    bool operator==(const Line& other)
+    {
+        if(_p1_index == other._p1_index && _p2_index == other._p2_index)
+            return true;
+        if(_p1_index == other._p2_index && _p2_index == other._p1_index)
+            return true;
+        return false;
+    }
 };
 
 void AttachPolyToMesh(Mesh& mesh, Polygon& poly);

@@ -21,17 +21,22 @@ static int GetFileInformation()
 
     return 0;
 }
+static void print(Polygon& polygon)
+{
+    std::cout << "polygon " << polygon._level_6_id << ":" << std::endl;
+    for(size_t v = 0; v < polygon._vert_indexes.size();++v)
+    {
+        size_t from = polygon._vert_indexes[v];
+        size_t to  = polygon._vert_indexes[(v+1) % polygon._vert_indexes.size()];
+        std::cout << verticies[from] << "," << verticies[to] << std::endl;
+    }
+
+}
 static void print(std::vector<Polygon*>& polygons)
 {
     for(size_t i = 0; i < polygons.size();++i)
     {
-        std::cout << "polygon " << polygons[i]->_level_6_id << ":" << std::endl;
-        for(size_t v = 0; v < polygons[i]->_vert_indexes.size();++v)
-        {
-            size_t from = polygons[i]->_vert_indexes[v];
-            size_t to  = polygons[i]->_vert_indexes[(v+1) % polygons[i]->_vert_indexes.size()];
-            std::cout << verticies[from] << "," << verticies[to] << std::endl;
-        }
+        print(*polygons[i]);
     }
 }
 int main(int args, char* argv[])
@@ -106,7 +111,9 @@ int main(int args, char* argv[])
     double before = getMillisecondsNow();
     for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
     {
-        reduce(itr->second->_polygons);
+        Polygon poly = reduce(itr->second->_polygons);
+        std::cout << itr->second->_level_2_id << " reduced" << std::endl;
+        //print(poly);
         //print(itr->second->_polygons);
     }
     std::cout << "reduction took : " << getMillisecondsNow()-before << " seconds" << std::endl;

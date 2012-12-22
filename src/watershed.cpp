@@ -52,7 +52,7 @@ static void load_verts_to_map(std::map<std::string,Vertex>& vert_map,std::ifstre
         split(split_line,line);
         if(split_line.size() >= FIELDS_SIZE)
         {
-            if(count % 10000 == 0) std::cout << "Working..." << std::endl;
+            if(count % 10000 == 0) std::cout << "Loading..." << std::endl;
             std::string key = split_line[ET_X] + split_line[ET_Y];
             //only add if this vertex hasn't been seen before
             if(vert_map.find(key) == vert_map.end())
@@ -200,10 +200,33 @@ inline static bool is_ccw(size_t a_index, size_t b_index, size_t c_index)
     const Vertex ba = verticies[b_index] - verticies[a_index];  //these are really vectors, but we can use the same class in this case
     const Vertex ca = verticies[c_index] - verticies[a_index];
 
-    //take the cross product. if the result is positive, we have CCW winding
+    //take the cross product. if the result is negative, we have CCW winding
     if((ba._x * ca._y - ca._x * ba._y) > 0)
-        return true;
-    return false;
+        return false;
+    return true;
+}
+static void find_convex_vertex(size_t* a_index, size_t* b_index, size_t* c_index, const long min_y, const std::vector<size_t>& vertex_indexes)
+{
+    const size_t N = vertex_indexes.size();
+    for(size_t i = 0; i < N; ++i)
+    {
+        Vertex& vert = verticies[vertex_indexes[i]];
+        if(vert._y == min_y)
+        {
+            *a_index = vertex_indexes[i];
+            if(i == 0)
+                *b_index = vertex_indexes[vertex_indexes.size()-1];
+            else
+                *b_index = vertex_indexes[i-1];
+            if(i == N-1)
+                *c_index = vertex_indexes[0];
+            else
+                *c_index = vertex_indexes[i+1];
+            return;
+        }
+    }
+    std::cerr << "You have no vertex that matches the input min_y. Please check your inputs" << std::endl;
+    exit(1);
 }
 static void rewind_ccw(std::vector<Polygon*>& polygons)
 {
@@ -216,10 +239,17 @@ static void rewind_ccw(std::vector<Polygon*>& polygons)
             std::cerr << "Polygon is incomplete. needs at least one more vertex: " << poly._parent->_level_2_id <<":" << poly._level_6_id  << std::endl;
             exit(1);
         }
-
-        if(!is_ccw(poly._vert_indexes[0],poly._vert_indexes[1],poly._vert_indexes[2]))
+        size_t a_index;
+        size_t b_index;
+        size_t c_index;
+        //we need to find the lowest y value vert of the polygon, and use the edge comming to that and going from it as
+        //our a, b, c points to determine winding. this is because we need to deal with concave polygons.
+        //to do that, we get the lowest (or highest) point.
+        //in our case, a O(n) lookup matching the bounding box's min  y against each vert should work
+        find_convex_vertex(&a_index,&b_index,&c_index,poly._box._min_y,poly._vert_indexes);
+        if(is_ccw(a_index,b_index,c_index))
         {
-            std::cout << "Poly " <<  poly._parent->_level_2_id << ":" << poly._level_6_id << " rewound to CCW" << std::endl;
+            std::cout << "Poly " <<  poly._parent->_level_2_id << ":" << poly._level_6_id << " rewound to CW" << std::endl;
             std::reverse(poly._vert_indexes.begin(),poly._vert_indexes.end());
         }
     }
@@ -252,17 +282,20 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
     std::sort(verticies.begin(),verticies.end(),comp_by_index);
     //std::cout << "verticies count: " << verticies.size() << std::endl;
     //std::cout << "create boundin volumes for polygon collision testing" << std::endl;
-    //construct the bounding boxes for each polygon
+
     Watersheds::iterator ws_end = mesh_map.end();
     for(Watersheds::iterator itr = mesh_map.begin();itr !=  ws_end; ++itr)
     {
-        //we also want to check the winding. if they are not wound CCW, then reverse the list. why CCW?
-        //because the data is arbitraraly wound and i prefer CCW
-        rewind_ccw(itr->second->_polygons);
+        //construct the bounding boxes for each polygon
+        construct_boxes(itr->second->_polygons);
+        //we also want to check the winding. if they are not wound CW, then reverse the list. why CW?
+        //because the majority of the sample data was CW wound
         //at the end of this, all polygons follow the same winding.
         //this is very valuable, because that means when we do edge detection,
         //we only need to compare the end of the first line to the beginning of the second
-        construct_boxes(itr->second->_polygons);
+        rewind_ccw(itr->second->_polygons);
+
+
     }
 
 }

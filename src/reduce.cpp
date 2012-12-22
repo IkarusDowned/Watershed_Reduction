@@ -117,17 +117,80 @@ static void construct_poly(std::vector<size_t>& result_indexes, std::vector<Poly
             line._p1_index = p1_index;
             line._p2_index = p2_index;
             line._count = 1;
-            std::cout << verticies[line._p1_index] << verticies[line._p2_index] << std::endl;
+            //std::cout << verticies[line._p1_index] << verticies[line._p2_index] << std::endl;
             //eliminate duplicates.
             total_lines.push_back(line);
         }
 
     }
+    std::sort(total_lines.begin(),total_lines.end(),comp_lines);
     std::cout << std::endl;
     std::cout << "constructed a total of " << total_lines.size() << " lines" << std::endl;
     //std::map<std::string,Line>::iterator total_end =total_lines.end();
-    //std::sort(total_lines.begin(),total_lines.end(),comp_lines);
+    std::sort(total_lines.begin(),total_lines.end(),comp_lines);
+    //next, go through the list comparing i and i+1 .
+    //if they are the same, skip them
+    const size_t N = total_lines.size()-1;
+    //this will hold the index of valid lines, sorted by the lines p1_index.
+    std::map<size_t,Line*> valid_lines;
+    for(size_t i = 0; i <= N; ++i)
+    {
+        Line& line1 = total_lines[i];
+        if(i == N)
+        {
+            valid_lines[line1._p1_index] = &line1;
+            break;
+        }
+        else
+        {
+            Line& line2 = total_lines[i+1];
+            if(line1 == line2)
+            {
+                ++i;
+                continue;
+            }
+            else
+            {
+                valid_lines[line1._p1_index] = &line1;
+            }
 
+        }
+
+        /*
+        Line& line2 = total_lines[i+1];
+        std::cout << "pairs" << std::endl;
+        std::cout << verticies[line1._p1_index] << verticies[line1._p2_index] << std::endl;
+        std::cout << verticies[line2._p1_index] << verticies[line2._p2_index] << std::endl;
+        if(line1 == line2)
+            ++i;
+        else
+        {
+            valid_lines[line1._p1_index] = &line1;
+            //std::cout << verticies[line1._p1_index] << verticies[line1._p2_index] << std::endl;
+            if(i == N)
+            {
+                //std::cout << "end " << verticies[line2._p1_index] << verticies[line2._p2_index] << std::endl;
+                valid_lines[line2._p1_index] = &line2;
+            }
+
+        }
+        */
+    }
+    std::cout << "reduced to " << valid_lines.size() << std::endl;
+    //now for the fun. we go thru each line
+    //adding its p1_index to the list. we reach the end when we have an iterator that stops on the p1 of the first value
+    std::map<size_t,Line*>::iterator itr = valid_lines.begin();
+    do {
+        Line& line = *itr->second;
+        //std::cout << verticies[line._p1_index] << verticies[line._p2_index] << std::endl;
+        result_indexes.push_back(line._p1_index);
+        itr = valid_lines.find(line._p2_index);
+        if(itr == valid_lines.end() )
+        {
+            std::cerr << "malformed valid lines list" << std::endl;
+            exit(1);
+        }
+    }while(itr != valid_lines.begin());  //aka, we loop back
     /*
 
     //next, go through the list comparing i and i+1 .
@@ -161,12 +224,14 @@ static void construct_poly(std::vector<size_t>& result_indexes, std::vector<Poly
         }
     }while(itr != valid_lines.begin());  //aka, we loop back
     */
-    /*
-    for(size_t i = 0; i < valid_lines.size(); ++i)
+
+    for(size_t i = 0; i < result_indexes.size(); ++i)
     {
-        std::cout << verticies[valid_lines[i]._p1_index] << verticies[valid_lines[i]._p2_index] << std::endl;
+        size_t p1_index = result_indexes[i];
+        size_t p2_index = result_indexes[(i+1) % result_indexes.size()];
+        std::cout << verticies[p1_index] << verticies[p2_index] << std::endl;
     }
-    */
+
 
 }
 Polygon reduce(std::vector<Polygon*>& polygons)

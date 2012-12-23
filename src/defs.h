@@ -49,7 +49,8 @@ struct Line {
     size_t _count;
     std::string key() const
     {
-        std::stringstream ss;
+        static std::stringstream ss;
+        ss.str("");
 
         if(_p1_index < _p2_index)
             ss << _p1_index << _p2_index;

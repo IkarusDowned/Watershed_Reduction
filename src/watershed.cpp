@@ -20,6 +20,14 @@ enum FIELDS {
     ET_ORDER,
     FIELDS_SIZE
 };
+const char* field_strings[FIELDS_SIZE] = {
+    "Level 1",
+    "Level 2",
+    "Level 6",
+    "ET_X",
+    "ET_Y",
+    "ET_Order"
+};
 inline static void split(std::vector<std::string>& result, const std::string& line, char delim = ',')
 {
     static std::stringstream ss;
@@ -137,11 +145,12 @@ static void load_meshes(Watersheds& mesh_map,std::ifstream& input,std::map<std::
         {
             if(count % 10000 == 0) std::cout << "Loading..." << std::endl;
             unsigned short this_level_1_id = atoi(split_line[LEVEL_1].c_str());
-
+            unsigned short this_level_2_id = atoi(split_line[LEVEL_2].c_str());
             if(count == 0)
             {
                 //first run, setup the first mesh and polygon
                 current_mesh = new Mesh();
+                current_mesh->_level_2_id = this_level_2_id;
                 current_polygon = new Polygon();
                 construct_mesh(*current_mesh,*current_polygon,split_line,vert_map);
                 //add to the mesh_list
@@ -149,13 +158,14 @@ static void load_meshes(Watersheds& mesh_map,std::ifstream& input,std::map<std::
             }
             else
             {
-                unsigned short this_level_2_id = atoi(split_line[LEVEL_2].c_str());
+
                 unsigned long this_level_6_id = strtoul(split_line[LEVEL_6].c_str(),NULL,0);
                 unsigned long this_et_order = strtoul(split_line[ET_ORDER].c_str(),NULL,0);
                 //new mesh, create a new mesh and start a new polygon
                 if(this_level_2_id != current_mesh->_level_2_id)
                 {
                     current_mesh = new Mesh();
+                    current_mesh->_level_2_id = this_level_2_id;
                     //construct_box(*current_polygon);
                     current_polygon = new Polygon();
                     construct_mesh(*current_mesh,*current_polygon,split_line,vert_map);
@@ -300,6 +310,42 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
 
 }
 
+static void output_poly(unsigned short level1_id, unsigned short level2_id, unsigned long counter,const Polygon& polygon,std::ofstream& output)
+{
+    std::vector<size_t> verts = polygon._vert_indexes;
+    const size_t N = verts.size();
+    for(size_t i = 0; i < N; ++i)
+    {
+        output << level1_id << "," << level2_id << "," << level2_id << counter << ","
+        << verticies[verts[i]]._x << "," << verticies[verts[i]]._y << "," << i << std::endl;
+    }
+}
+void output_reduced_mesh(unsigned short level1_id, unsigned short level2_id, Mesh& mesh,std::ofstream& output)
+{
+
+
+    std::vector<Polygon*>& polygons = mesh._polygons;
+    const size_t N = polygons.size();
+    for(size_t i = 0; i < N; ++i)
+    {
+        const Polygon& poly = *polygons[i];
+        output_poly(level1_id,level2_id,i,poly,output);
+
+    }
+}
+
+void output_header(std::ofstream& output)
+{
+    //write header
+    for(unsigned short i = 0; i < FIELDS_SIZE; ++i)
+    {
+        output << field_strings[i];
+        if(i < (FIELDS_SIZE-1))
+            output << ",";
+
+    }
+    output << std::endl;
+}
 void destroy_mesh_data(Mesh& m)
 {
     const size_t J = m._polygons.size();

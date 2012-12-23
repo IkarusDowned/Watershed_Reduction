@@ -79,36 +79,14 @@ int main(int args, char* argv[])
     //construct the mesh tree
     ::construct_meshs(meshes,infile);
 
-
-    Watersheds::iterator end = meshes.end();
-
-    std::cout << "Available level 1 meshes:" << std::endl;
-    for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
-    {
-        std::cout << "\t" << itr->first << std::endl;
-        std::cout << "\tAvailable level 2 meshes:" << std::endl;
-        Level2* level2 = itr->second;
-        std::cout << "\t\t" << level2->_level_2_id << std::endl;
-        std::cout << "\t\tAvailable level 6 mesehes: " << std::endl;
-        const size_t l = level2->_polygons.size();
-        for(size_t i = 0; i < l; ++i)
-        {
-            Level6 *level6 = level2->_polygons[i];
-            std::cout << "\t\t\t" << level6->_level_6_id << " with " << level6->_vert_indexes.size() << " verts " << std::endl;
-
-        }
-
-
-
-    }
+    output_header(outfile);
     double before = getMillisecondsNow();
+    Watersheds::iterator end = meshes.end();
     for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
     {
-        Mesh mesh =reduce(itr->second->_polygons);
-        std::cout << itr->second->_level_2_id << " reduced" << std::endl;
-        //print(poly);
-        //print(mesh._polygons);
-        std::cout << std::endl;
+        Mesh mesh =reduce(itr->second->_level_2_id,itr->second->_polygons);
+        std::cout << itr->first << " " << itr->second->_level_2_id << " reduced" << std::endl;
+        output_reduced_mesh(itr->first,itr->second->_level_2_id,mesh,outfile);
         destroy_mesh_data(mesh);
 
     }

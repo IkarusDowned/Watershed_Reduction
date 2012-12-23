@@ -6,6 +6,6 @@
 /**
 *** reduce the list of polygons down to a single polygon
 **/
-Mesh reduce(std::vector<Polygon*>& polygons);
+Mesh reduce(unsigned short level2_id ,std::vector<Polygon*>& polygons);
 
 #endif // REDUCE_HPP_INCLUDED

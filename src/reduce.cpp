@@ -101,15 +101,15 @@ inline static bool comp_lines(const Line& a, const Line& b)
     return false;
 }
 
-static void construct_mesh(Mesh& new_mesh, std::vector<Polygon*>& original_polygons)
+static void construct_mesh(unsigned short level2_id, Mesh& new_mesh, std::vector<Polygon*>& original_polygons)
 {
+    std::cout << "re-constructing the reduced mesh for " << level2_id << std::endl;
     std::vector<Line> total_lines;
     const size_t P = original_polygons.size();
     //generate the total line list
     for(size_t i = 0; i < P; ++i)
     {
         Polygon& poly = *original_polygons[i];
-        //std::cout << "Poly: " << poly._parent->_level_2_id << ":" << poly._level_6_id << std::endl;
         const size_t V = poly._vert_indexes.size();
         for(size_t j = 0; j < V; ++j)
         {
@@ -118,7 +118,6 @@ static void construct_mesh(Mesh& new_mesh, std::vector<Polygon*>& original_polyg
             Line line;
             line._p1_index = p1_index;
             line._p2_index = p2_index;
-            //std::cout << "\t" << verticies[line._p1_index] << verticies[line._p2_index] << "\t" << j << std::endl;
             line._count = 1;
             if(line._p1_index == line._p2_index)
             {
@@ -131,8 +130,6 @@ static void construct_mesh(Mesh& new_mesh, std::vector<Polygon*>& original_polyg
 
     }
     std::sort(total_lines.begin(),total_lines.end(),comp_lines);
-    std::cout << std::endl;
-    std::cout << "constructed a total of " << total_lines.size() << " lines" << std::endl;
     std::sort(total_lines.begin(),total_lines.end(),comp_lines);
     //next, go through the list comparing i and i+1 .
     //if they are the same, skip them
@@ -164,20 +161,20 @@ static void construct_mesh(Mesh& new_mesh, std::vector<Polygon*>& original_polyg
 
 
     }
-    std::cout << "reduced to " << valid_lines.size() << std::endl;
     //now for the fun. we go thru each line
     //add the p1_indexes to the current polygon we are constructing. search for the next index based
     //on the p2_index on the current line. When we reach this line again, we have a complete polygon, and
     //we can push it onto new_mesh, and start a new polygon.
     std::multimap<size_t,Line*>::iterator itr = valid_lines.begin();
+    unsigned long polygon_id = 0;
     Polygon* polygon = new Polygon();
+    polygon->_level_6_id = polygon_id;
     polygon->_parent = &new_mesh;
     size_t current_start_index = (itr->second)->_p1_index;
     while(true) {
         //get the line
         Line& line = *itr->second;
         //remove this line from the valid_lines
-        //std::cout << "removing: " << verticies[line._p1_index] << verticies[line._p2_index] << std::endl;
         valid_lines.erase(itr);
         //print_valid(valid_lines);
         //add the p1_index into this polygon
@@ -193,6 +190,7 @@ static void construct_mesh(Mesh& new_mesh, std::vector<Polygon*>& original_polyg
             if(valid_lines.size() == 0)
                 break;  //if not, just leave. we are done
             polygon = new Polygon();
+            polygon->_level_6_id = ++polygon_id;
             polygon->_parent = &new_mesh;
             //first, see if there are any other lines with a startig point here
             itr = valid_lines.find(current_start_index);
@@ -230,7 +228,7 @@ static void construct_mesh(Mesh& new_mesh, std::vector<Polygon*>& original_polyg
     }
 
 }
-Mesh reduce(std::vector<Polygon*>& polygons)
+Mesh reduce(unsigned short level2_id, std::vector<Polygon*>& polygons)
 {
     //iterate through every polygon, comparing it against the other polygons
     //optimally, we would rather make a single pass through the polygons.
@@ -254,10 +252,9 @@ Mesh reduce(std::vector<Polygon*>& polygons)
             }
 
         }
-        std::cout << "T junction elimination on: " << a._level_6_id << std::endl;
     }
     Mesh mesh;
-    construct_mesh(mesh,polygons);
+    construct_mesh(level2_id,mesh,polygons);
     return mesh;
 }
 

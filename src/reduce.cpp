@@ -55,7 +55,8 @@ static void do_tjunction_elimination(Polygon& a, Polygon&b)
             //slight loop unwind, so it does look a bit funky
             //first check if this is actually the same line
             //since winding is guaranteed CCW, we just check opposite points
-            if((p1_index == q2_index && p2_index == q1_index) ||(p1_index == q1_index && p2_index == q2_index) )
+            if((p1_index == q2_index && p2_index == q1_index))
+            //if((p1_index == q2_index && p2_index == q1_index) ||(p1_index == q1_index && p2_index == q2_index) )
                 continue;
 
             //check p1,p2 against q1
@@ -129,7 +130,6 @@ static void construct_mesh(unsigned short level2_id, Mesh& new_mesh, std::vector
         }
 
     }
-    std::sort(total_lines.begin(),total_lines.end(),comp_lines);
     std::sort(total_lines.begin(),total_lines.end(),comp_lines);
     //next, go through the list comparing i and i+1 .
     //if they are the same, skip them

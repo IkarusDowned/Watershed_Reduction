@@ -74,7 +74,8 @@ int main(int args, char* argv[])
         std::cerr << "Error opening output file: " << output << std::endl;
     }
 
-    freopen("stdout.txt","w",stdout);
+    //uncomment the below if you want console output to file
+    //freopen("stdout.txt","w",stdout);
     Watersheds meshes;
     //construct the mesh tree
     ::construct_meshs(meshes,infile);

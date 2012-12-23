@@ -6,14 +6,6 @@
 /**
 *** reduce the list of polygons down to a single polygon
 **/
-Polygon reduce(std::vector<Polygon*>& polygons);
-/**
-*** reduce the mesh down to its edges
-**/
-std::list<Line> detect_mesh_edges(const Mesh& mesh);
-/**
-*** construct the line list for a given polygon
-**/
-std::list<Line> make_line_list(const Polygon& poly);
+Mesh reduce(std::vector<Polygon*>& polygons);
 
 #endif // REDUCE_HPP_INCLUDED

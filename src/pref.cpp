@@ -12,9 +12,10 @@ double getMillisecondsNow()
     double result = 0;
 #ifdef _WIN32
     unsigned long long counter;
-    unsigned long long freq;
+    static unsigned long long freq = 0;
     QueryPerformanceCounter((LARGE_INTEGER *)&counter);
-    QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
+    if(!freq)
+        QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
     result = (double)counter / (double)freq;
 #endif
     return result;

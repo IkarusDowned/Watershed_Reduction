@@ -95,13 +95,6 @@ int main(int args, char* argv[])
         {
             Level6 *level6 = level2->_polygons[i];
             std::cout << "\t\t\t" << level6->_level_6_id << " with " << level6->_vert_indexes.size() << " verts " << std::endl;
-            /*
-            const size_t V = level6->_vert_indexes.size();
-            for(size_t v = 0; v < V; ++v)
-            {
-                std::cout << "\t\t\t\t" <<  verticies[level6->_vert_indexes[v]] << std::endl;
-            }
-            */
 
         }
 
@@ -111,31 +104,15 @@ int main(int args, char* argv[])
     double before = getMillisecondsNow();
     for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
     {
-        Polygon poly = reduce(itr->second->_polygons);
+        Mesh mesh =reduce(itr->second->_polygons);
         std::cout << itr->second->_level_2_id << " reduced" << std::endl;
         //print(poly);
-        //print(itr->second->_polygons);
+        //print(mesh._polygons);
+        std::cout << std::endl;
+        destroy_mesh_data(mesh);
+
     }
     std::cout << "reduction took : " << getMillisecondsNow()-before << " seconds" << std::endl;
-
-    //todo: ITS TOO SLOW. the logic is sound, tests are working. time to optimize
-    /*
-    Watersheds::iterator end = meshes.end();
-
-    for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
-        do_tjunction_elimination(*itr->second);
-    std::cout << "Generate per level 2 edges" << std::endl;
-
-    for(Watersheds::iterator itr = meshes.begin();itr != end; ++itr)
-    {
-        std::cout << "For mesh " << itr->first << ":" << std::endl;
-        Level2* level2 = itr->second;
-        std::list<Line> lines = detect_mesh_edges(*level2);
-
-    }
-    */
-
-
     ::destroy_mesh_data(meshes);
 
     return 0;

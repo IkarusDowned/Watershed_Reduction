@@ -300,19 +300,25 @@ void construct_meshs(Watersheds& mesh_map,std::ifstream& input)
 
 }
 
+void destroy_mesh_data(Mesh& m)
+{
+    const size_t J = m._polygons.size();
+    for(size_t j = 0; j < J; ++j)
+    {
+        delete m._polygons[j];
+        m._polygons[j] = NULL;
+    }
+
+}
 void destroy_mesh_data(Watersheds& mesh_map)
 {
     Watersheds::iterator end = mesh_map.end();
     for(Watersheds::iterator itr = mesh_map.begin(); itr != end; ++itr)
     {
         Mesh* m = itr->second;
-        const size_t J = m->_polygons.size();
-        for(size_t j = 0; j < J; ++j)
-        {
-            delete m->_polygons[j];
-            m->_polygons[j] = NULL;
-        }
+        destroy_mesh_data(*m);
         delete m;
+        m = NULL;
         itr->second = NULL;
 
     }

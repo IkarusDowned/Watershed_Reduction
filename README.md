@@ -9,35 +9,21 @@ and reduce the level 6 polygons to the outter edge only level 2 polygon.
 
 In essence, we want the "outline" of the level 2 mesh, based on the level 6 polygon information.
 
-There are a couple things that make this a bit "slow":
-- The original data is not well formed for graphical edge-reduction work. The creators take no care of sharing verticies or T-junctions. This means you have to worry about all possible T-junction scenarios. So, for example:
----------
-|       |-----
-|       |    |
-|       |-----
-|       |
----------
+There are a few hangups we need to concern ourselves with:
 
-in this case, the shared edge is not actually "shared" in the original code -- we must find this T-junction and eliminate it ourselves. 
+- the data wasn't constructed for optimizaed visualization in mind, so the winding order is not uniform. To guarantee quick edge-detection, we rewind the edges into clockwise form
 
-- Polygons are not stored as triangles, but more as a line-list of verts. This is (possibly) easy for rendering, but makes it a pain for doing edge-detection work
+- pertaining to the lack of optimization, vertex values are repeated accross the entire data. In other words, there is no vertex indexing built in to the data we can leverage; if 3 lines share the same point, the point's actual X and Y values are repeated 3 times. For optimization and efficient memory usage, we must construct the vertex array and indexing ourselves. 
 
-This is still a work in progress. Currently in place:
-- T-junction removal code which checks the following cases:
-1) non-touching polygons
-2) polygons whose edges share a complete edge
-3) polygons a,b where an edge in a is a sub-edge in b (ie it is on the same line but is a line segment that is shorter than b). In this case, the original data does not have the line segment points listed in a, so we must insert them
-4) polygons a, b where each polygon is "partial" shared by the other. example:
-----
-|  |
-|  |----
-|  |   |
-----   |
-   |   |
-   |   |
-   -----
+- There are no guarantees that neighboring watersheds share points. Lines are broken up into intervals of distinct size, but there is no guarantee on all lines having the same interval accross polygons. So far, this has not been violated in our sample data. We also have no guarantees that T-junctions don't occur, which ends up being the biggest factor in our reduction code.
 
-(its bad ascii art, i know. the shared partial is supposed to be the same line)
+- Unfortunatly, do to there being no guarantees about the data layout, we are forced to make a design decision. Either assume that T-junctions won't occur and that intervals are guaranteed, or do T-junction elimination ourselves. In some cases, particularly rendering where "hanging" edges my not be an issue, we can get away with the former. However, our end result is to have complete accuracy to be used with non-visualization projects. We need to do full T-junction checking
 
-again, the original data file does not indicate the single shared vertex, and we must add it in
+- Full T-junction detection involves checking a few cases:
+1) two lines share both points. in other we can ignore these two lines since they are the same
+2) two lines share a single point and their respective remaining points do not lie on the same direction vector. These are two different lines, and cannot be eliminated
+3) two lines A,B share a single point, and the remaining point of A lies on the interior of line B. In this case, we need to eliminate the T-junction in B by adding a vertex at the location of A
+4) two lines A,B partially overlap, sharing no points. In this case, we need to do T-junction removal on A where the point B lies, and on B where the point in A lies.
+
+** So far, we have not had sample data that actually causes T-junctions, but again there are no guarantees. 
 
